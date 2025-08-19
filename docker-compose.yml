@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:15
+    container_name: fiso_db
+    restart: always
+    environment:
+      POSTGRES_USER: fiso
+      POSTGRES_PASSWORD: yourstrongpassword
+      POSTGRES_DB: fiso_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: fiso_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://fiso:yourstrongpassword@db:5432/fiso_db?sslmode=disable
+    volumes:
+      # Mount your local AWS credentials into the container
+      - C:\Users\venus\.aws:/root/.aws:ro
+
+volumes:
+  postgres_data:

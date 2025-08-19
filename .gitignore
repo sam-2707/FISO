@@ -1,0 +1,27 @@
+# Binaries
+*.out
+*.exe
+fiso_server
+
+# Archives
+*.zip
+*.tar.gz
+
+# Go dependencies
+vendor/
+
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# OS generated files
+.DS_Store
+Thumbs.db
