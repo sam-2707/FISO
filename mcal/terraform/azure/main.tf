@@ -57,12 +57,16 @@ resource "azurerm_linux_function_app" "fiso_function" {
 
   site_config {
     application_stack {
-      python_version = "3.9"
+      python_version = "3.11"
     }
   }
-
-  # This is the new, simplified way to deploy the code
-  zip_deploy_file = data.archive_file.zip_python_code.output_path
+  # --- ADD THIS BLOCK ---  # These settings explicitly tell Azure how to handle the deployment.
+  app_settings = {
+    "ENABLE_ORYX_BUILD"          = "true"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
+    "WEBSITE_RUN_FROM_PACKAGE"   = "1"
+  }
+  # --- END ADD BLOCK ---
 }
 
 # Helper for unique names (No changes)
