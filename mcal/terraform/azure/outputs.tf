@@ -6,6 +6,6 @@ output "function_app_name" {
 
 output "function_app_invoke_url" {
   description = "The invocation URL of the HTTP-triggered function."
-  # This now points to the correct function name
-  value       = "https://://${azurerm_linux_function_app.fiso_function.default_hostname}/api/HttpTriggerFunc?name=FISO"
+  # Fixed the URL format
+  value       = "https://${azurerm_linux_function_app.fiso_function.default_hostname}/api/HttpTriggerFunc"
 }
