@@ -1,0 +1,118 @@
+# FISO API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiso-api
+  labels:
+    app: fiso-api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fiso-api
+  template:
+    metadata:
+      labels:
+        app: fiso-api
+        version: v1
+    spec:
+      containers:
+      - name: fiso-api
+        image: fiso/api:latest
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: database-url
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: aws-access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: aws-secret-key
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: aws-region
+        - name: CLOUD_PROVIDER
+          value: "aws"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: fiso-config
+          mountPath: /etc/fiso
+          readOnly: true
+      volumes:
+      - name: fiso-config
+        configMap:
+          name: fiso-config
+---
+# FISO API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiso-api-service
+  labels:
+    app: fiso-api
+spec:
+  selector:
+    app: fiso-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
+---
+# FISO API Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fiso-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fiso-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

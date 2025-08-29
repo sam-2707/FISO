@@ -1,0 +1,141 @@
+# FISO Monitoring Stack - Prometheus
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiso-prometheus
+  labels:
+    app: fiso-monitoring
+    component: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fiso-monitoring
+      component: prometheus
+  template:
+    metadata:
+      labels:
+        app: fiso-monitoring
+        component: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
+        command:
+        - '/bin/prometheus'
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--storage.tsdb.retention.time=200h'
+        - '--web.enable-lifecycle'
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage
+        emptyDir: {}
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiso-monitoring-service
+  labels:
+    app: fiso-monitoring
+    component: prometheus
+spec:
+  selector:
+    app: fiso-monitoring
+    component: prometheus
+  ports:
+    - name: prometheus
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+  type: ClusterIP
+---
+# Prometheus Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    rule_files:
+      - "fiso_rules.yml"
+
+    scrape_configs:
+      - job_name: 'fiso-api'
+        static_configs:
+          - targets: ['fiso-api-service:80']
+        metrics_path: '/metrics'
+        scrape_interval: 10s
+
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+        - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+
+  fiso_rules.yml: |
+    groups:
+    - name: fiso_alerts
+      rules:
+      - alert: FISOHighErrorRate
+        expr: sum(rate(fiso_errors_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "FISO API has high error rate"
+          description: "FISO API error rate is {{ $value }} errors per second"
+
+      - alert: FISOHighLatency
+        expr: histogram_quantile(0.95, sum(rate(fiso_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "FISO API has high latency"
+          description: "FISO API 95th percentile latency is {{ $value }}s"
+
+      - alert: FISOPodCrashLoop
+        expr: rate(kube_pod_container_status_restarts_total{pod=~"fiso-api-.*"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FISO Pod is crash looping"
+          description: "Pod {{ $labels.pod }} is restarting frequently"

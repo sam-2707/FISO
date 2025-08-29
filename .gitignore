@@ -17,11 +17,21 @@ __pycache__/
 venv/
 gcp-credentials.json
 
+# Kubernetes Local Secrets
+k8s/*secrets.local.yaml
+k8s/*.local.yaml
+
+# AWS/Cloud Credentials
+*.pem
+*.key
+aws-credentials.json
+
 # Terraform
 .terraform/
 *.tfstate
 *.tfstate.backup
 *.tfvars
+D:\DS LiT\fiso\k8s\fiso-secrets.yaml
 
 # OS generated files
 .DS_Store

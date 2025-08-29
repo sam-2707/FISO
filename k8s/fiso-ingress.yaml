@@ -1,0 +1,78 @@
+# FISO AWS Application Load Balancer Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fiso-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: fiso-alb
+    alb.ingress.kubernetes.io/tags: Environment=production,Project=fiso
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fiso-api-service
+            port:
+              number: 80
+      - path: /metrics
+        pathType: Prefix
+        backend:
+          service:
+            name: fiso-monitoring-service
+            port:
+              number: 9090
+---
+# AWS Security Group for FISO
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiso-api-service-nlb
+  namespace: default
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+spec:
+  type: LoadBalancer
+  selector:
+    app: fiso-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+# Network Policy for AWS EKS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: fiso-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: fiso-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 5432 # PostgreSQL
+    - protocol: UDP
+      port: 53   # DNS
