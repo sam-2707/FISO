@@ -1,4 +1,4 @@
-# FISO API Deployment
+# FISO API Deployment        image: 412374076384.dkr.ecr.us-east-1.amazonaws.com/fiso-api:latest
 apiVersion: apps/v1
 kind: Deployment
 metadata:
