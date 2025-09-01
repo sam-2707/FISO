@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: fiso-api
-        image: fiso/api:latest
+        image: 412374076384.dkr.ecr.us-east-1.amazonaws.com/fiso-api:latest
         ports:
         - containerPort: 8080
           protocol: TCP
