@@ -7,14 +7,14 @@ Write-Host "=================================================="
 
 # Configuration - Update these URLs after deploying to Azure/GCP
 $AWS_LAMBDA_URL = "https://krls9u88od.execute-api.us-east-1.amazonaws.com/prod"
-$AZURE_FUNCTION_URL = "https://your-azure-function.azurewebsites.net/api/HttpTriggerFunc"  # Update after deployment
-$GCP_FUNCTION_URL = "https://your-region-your-project.cloudfunctions.net/fiso-function"   # Update after deployment
+$AZURE_FUNCTION_URL = "https://fiso-sample-function-app-cmcks5.azurewebsites.net/api/httptriggerfunc"  # Azure deployed!
+$GCP_FUNCTION_URL = "http://localhost:8080"   # GCP Local Emulator
 
 Write-Host ""
 Write-Host "Testing FISO Multi-Cloud Orchestration..." -ForegroundColor Cyan
 
 # Test cases for multi-cloud demo
-$testCases = @(
+$awsTestCases = @(
     @{
         Name = "Health Check"
         Path = "/health"
@@ -23,60 +23,56 @@ $testCases = @(
     },
     @{
         Name = "AWS Provider Request"
-        Path = ""
+        Path = "/orchestrate"
         Method = "POST"
         Body = @{
-            action = "orchestrate"
-            provider = "aws"
+            target = "test-function"
             data = @{
-                target = "test-function"
                 test_id = "aws-001"
                 workload = "compute-intensive"
             }
         }
+    }
+)
+
+$azureTestCases = @(
+    @{
+        Name = "Health Check"
+        Path = ""
+        Method = "GET"
+        Body = $null
     },
     @{
         Name = "Azure Provider Request"
         Path = ""
         Method = "POST"
         Body = @{
-            action = "orchestrate"
-            provider = "azure"
+            target = "test-function"
             data = @{
-                target = "test-function"
                 test_id = "azure-001"
                 workload = "data-processing"
             }
         }
+    }
+)
+
+$gcpTestCases = @(
+    @{
+        Name = "Health Check (Emulator)"
+        Path = ""
+        Method = "GET"
+        Body = $null
     },
     @{
-        Name = "GCP Provider Request"
+        Name = "GCP Provider Request (Emulator)"
         Path = ""
         Method = "POST"
         Body = @{
             action = "orchestrate"
-            provider = "gcp"
+            target = "test-function"
             data = @{
-                target = "test-function"
                 test_id = "gcp-001"
-                workload = "ml-inference"
-            }
-        }
-    },
-    @{
-        Name = "Intelligent Routing"
-        Path = ""
-        Method = "POST"
-        Body = @{
-            action = "orchestrate"
-            data = @{
-                target = "test-function"
-                test_id = "auto-001"
-                workload = "balanced"
-                requirements = @{
-                    min_memory = "512MB"
-                    max_latency = "2000ms"
-                }
+                workload = "ml-processing"
             }
         }
     }
@@ -154,12 +150,12 @@ function Test-CloudProvider {
 }
 
 # Test AWS Lambda (Primary - always available)
-$awsResults = Test-CloudProvider -Name "AWS Lambda" -Url $AWS_LAMBDA_URL -Tests $testCases
+$awsResults = Test-CloudProvider -Name "AWS Lambda" -Url $AWS_LAMBDA_URL -Tests $awsTestCases
 
 # Test Azure Functions (if deployed)
 $azureResults = @()
-if ($AZURE_FUNCTION_URL -ne "https://your-azure-function.azurewebsites.net/api/HttpTriggerFunc") {
-    $azureResults = Test-CloudProvider -Name "Azure Functions" -Url $AZURE_FUNCTION_URL -Tests $testCases[0..2]
+if ($AZURE_FUNCTION_URL -ne "https://your-azure-function.azurewebsites.net/api/httptriggerfunc") {
+    $azureResults = Test-CloudProvider -Name "Azure Functions" -Url $AZURE_FUNCTION_URL -Tests $azureTestCases
 } else {
     Write-Host ""
     Write-Host "=== Azure Functions ===" -ForegroundColor Magenta
@@ -170,7 +166,7 @@ if ($AZURE_FUNCTION_URL -ne "https://your-azure-function.azurewebsites.net/api/H
 # Test GCP Functions (if deployed)
 $gcpResults = @()
 if ($GCP_FUNCTION_URL -ne "https://your-region-your-project.cloudfunctions.net/fiso-function") {
-    $gcpResults = Test-CloudProvider -Name "Google Cloud Functions" -Url $GCP_FUNCTION_URL -Tests $testCases[0..2]
+    $gcpResults = Test-CloudProvider -Name "Google Cloud Functions" -Url $GCP_FUNCTION_URL -Tests $gcpTestCases
 } else {
     Write-Host ""
     Write-Host "=== Google Cloud Functions ===" -ForegroundColor Magenta
@@ -234,7 +230,7 @@ Write-Host ""
 Write-Host "=== Next Steps ===" -ForegroundColor Cyan
 Write-Host "1. AWS Lambda: Fully operational" -ForegroundColor Green
 
-if ($AZURE_FUNCTION_URL -eq "https://your-azure-function.azurewebsites.net/api/HttpTriggerFunc") {
+if ($AZURE_FUNCTION_URL -eq "https://your-azure-function.azurewebsites.net/api/httptriggerfunc") {
     Write-Host "2. Deploy Azure Functions:" -ForegroundColor Yellow
     Write-Host "   cd mcal/terraform/azure && terraform init && terraform apply" -ForegroundColor Gray
 } else {

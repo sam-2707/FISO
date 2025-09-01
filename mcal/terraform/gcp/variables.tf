@@ -2,7 +2,7 @@ variable "gcp_project_id" {
   description = "The GCP Project ID to deploy resources in."
   type        = string
   # IMPORTANT: Make sure this is your actual Project ID
-  default     = "isentropic-button-hn4q7"
+  default     = "famous-mix-469509-s3"
 }
 
 variable "gcp_region" {
