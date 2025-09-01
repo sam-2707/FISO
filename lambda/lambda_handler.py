@@ -77,8 +77,13 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         # Execute the function based on selected provider
         if selected_provider == 'aws':
             result = invoke_aws_function(target, data)
+        elif selected_provider == 'azure':
+            result = invoke_azure_function(target, data)
+        elif selected_provider == 'gcp':
+            result = invoke_gcp_function(target, data)
         else:
-            # For now, default to AWS if other providers aren't available
+            # Default to AWS if provider not recognized
+            logger.warning(f"Unknown provider {selected_provider}, defaulting to AWS")
             result = invoke_aws_function(target, data)
         
         # Prepare response
@@ -163,4 +168,106 @@ def invoke_aws_function(target: str, data: Dict[str, Any]) -> Dict[str, Any]:
             'status': 'error',
             'error': str(e),
             'provider': 'aws'
+        }
+
+def invoke_azure_function(target: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Invoke an Azure Function
+    """
+    try:
+        import requests
+        
+        # Get Azure function URL from environment
+        azure_function_url = os.getenv('AZURE_FUNCTION_URL', 'https://your-azure-function.azurewebsites.net/api/HttpTriggerFunc')
+        
+        # Prepare payload
+        payload = {
+            'data': data,
+            'source': 'fiso-orchestrator',
+            'target': target
+        }
+        
+        # Set headers
+        headers = {
+            'Content-Type': 'application/json',
+            'x-functions-key': os.getenv('AZURE_FUNCTION_KEY', '')
+        }
+        
+        # Make HTTP request to Azure Function
+        response = requests.post(
+            azure_function_url,
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        response.raise_for_status()
+        response_data = response.json()
+        
+        return {
+            'status': 'success',
+            'data': response_data,
+            'execution_time': response.elapsed.total_seconds() * 1000,
+            'provider': 'azure'
+        }
+        
+    except Exception as e:
+        logger.error(f"Error invoking Azure function {target}: {str(e)}")
+        return {
+            'status': 'error',
+            'error': str(e),
+            'provider': 'azure'
+        }
+
+def invoke_gcp_function(target: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Invoke a Google Cloud Function
+    """
+    try:
+        import requests
+        
+        # Get GCP function URL from environment
+        gcp_function_url = os.getenv('GCP_FUNCTION_URL', 'https://your-region-your-project.cloudfunctions.net/fiso-function')
+        
+        # Prepare payload
+        payload = {
+            'data': data,
+            'source': 'fiso-orchestrator',
+            'target': target
+        }
+        
+        # Set headers
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        
+        # Add authentication if available
+        gcp_token = os.getenv('GCP_FUNCTION_TOKEN')
+        if gcp_token:
+            headers['Authorization'] = f'Bearer {gcp_token}'
+        
+        # Make HTTP request to GCP Function
+        response = requests.post(
+            gcp_function_url,
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        response.raise_for_status()
+        response_data = response.json()
+        
+        return {
+            'status': 'success',
+            'data': response_data,
+            'execution_time': response.elapsed.total_seconds() * 1000,
+            'provider': 'gcp'
+        }
+        
+    except Exception as e:
+        logger.error(f"Error invoking GCP function {target}: {str(e)}")
+        return {
+            'status': 'error',
+            'error': str(e),
+            'provider': 'gcp'
         }
