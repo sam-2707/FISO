@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FISO - Secure Multi-Cloud Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .auth-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .auth-section h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .auth-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .auth-controls input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .auth-controls button {
+            padding: 10px 20px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .auth-controls button:hover {
+            background: #3182ce;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-healthy {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-degraded {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-unknown {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .provider-card {
+            border-left: 4px solid #4299e1;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .provider-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .provider-details {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .response-time {
+            color: #4299e1;
+            font-weight: 600;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4299e1;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #4a5568;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .logs-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .log-timestamp {
+            color: #4a5568;
+        }
+
+        .log-level-info {
+            color: #4299e1;
+        }
+
+        .log-level-success {
+            color: #48bb78;
+        }
+
+        .log-level-error {
+            color: #f56565;
+        }
+
+        .api-test-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .test-button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .test-button:hover {
+            background: #38a169;
+        }
+
+        .test-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .refresh-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #48bb78;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 FISO Multi-Cloud Dashboard</h1>
+            <p>Enterprise-grade secure orchestration across AWS, Azure, and GCP</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <h3>🔐 API Authentication</h3>
+            <div class="auth-controls">
+                <input type="text" id="apiKey" placeholder="Enter API Key (fiso_...)" />
+                <button onclick="setApiKey()">Set API Key</button>
+                <button onclick="generateNewKey()">Generate New Key</button>
+                <span id="authStatus" class="status-indicator status-unknown">Not Authenticated</span>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- System Overview -->
+            <div class="card">
+                <h3>📊 System Overview <span class="refresh-indicator" id="refreshIndicator"></span></h3>
+                <div id="systemOverview">
+                    <p>Loading system status...</p>
+                </div>
+                <div class="metrics-grid" id="overviewMetrics">
+                    <!-- Metrics will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Cloud Providers Status -->
+            <div class="card">
+                <h3>☁️ Cloud Providers</h3>
+                <div id="providersStatus">
+                    <p>Loading provider status...</p>
+                </div>
+            </div>
+
+            <!-- Performance Chart -->
+            <div class="card">
+                <h3>📈 Response Time Trends</h3>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Security Metrics -->
+            <div class="card">
+                <h3>🛡️ Security Metrics</h3>
+                <div id="securityMetrics">
+                    <p>Loading security metrics...</p>
+                </div>
+            </div>
+
+            <!-- Activity Logs -->
+            <div class="card">
+                <h3>📋 Activity Logs</h3>
+                <div class="logs-container" id="activityLogs">
+                    <div class="log-entry">
+                        <span class="log-timestamp">[Loading...]</span>
+                        <span class="log-level-info">INFO</span>
+                        Initializing dashboard...
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <h3>📖 API Endpoints</h3>
+                <div id="apiEndpoints">
+                    <p>Loading API documentation...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Testing Section -->
+        <div class="api-test-section">
+            <h3>🧪 API Testing</h3>
+            <div>
+                <button class="test-button" onclick="testHealth()">Test Health Check</button>
+                <button class="test-button" onclick="testStatus()">Test System Status</button>
+                <button class="test-button" onclick="testOrchestration()">Test Orchestration</button>
+                <button class="test-button" onclick="testMetrics()">Test Metrics (Admin)</button>
+            </div>
+            <div id="testResults" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let apiKey = '';
+        let apiBase = 'http://localhost:5000';
+        let performanceChart = null;
+        let refreshInterval = null;
+
+        // Performance data for charting
+        let performanceData = {
+            labels: [],
+            aws: [],
+            azure: [],
+            gcp: []
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart();
+            addLog('Dashboard initialized', 'info');
+            
+            // Try to load data without auth first (for demo)
+            refreshData();
+            
+            // Set up auto-refresh
+            refreshInterval = setInterval(refreshData, 30000); // Refresh every 30 seconds
+        });
+
+        // Authentication functions
+        function setApiKey() {
+            const keyInput = document.getElementById('apiKey');
+            apiKey = keyInput.value.trim();
+            
+            if (apiKey) {
+                document.getElementById('authStatus').className = 'status-indicator status-healthy';
+                document.getElementById('authStatus').textContent = 'Authenticated';
+                addLog(`API key set: ${apiKey.substring(0, 20)}...`, 'success');
+                refreshData();
+            } else {
+                document.getElementById('authStatus').className = 'status-indicator status-unknown';
+                document.getElementById('authStatus').textContent = 'Not Authenticated';
+            }
+        }
+
+        async function generateNewKey() {
+            try {
+                const response = await axios.post(`${apiBase}/auth/generate-key`, {
+                    user_id: `dashboard_user_${Date.now()}`,
+                    permissions: ['read', 'orchestrate', 'admin']
+                });
+                
+                if (response.data.success) {
+                    const newKey = response.data.data.api_key;
+                    document.getElementById('apiKey').value = newKey;
+                    apiKey = newKey;
+                    document.getElementById('authStatus').className = 'status-indicator status-healthy';
+                    document.getElementById('authStatus').textContent = 'Authenticated';
+                    addLog(`New API key generated: ${newKey.substring(0, 20)}...`, 'success');
+                    refreshData();
+                } else {
+                    addLog('Failed to generate API key', 'error');
+                }
+            } catch (error) {
+                addLog(`Error generating API key: ${error.message}`, 'error');
+            }
+        }
+
+        // Data refresh functions
+        async function refreshData() {
+            try {
+                await Promise.all([
+                    loadSystemOverview(),
+                    loadProvidersStatus(),
+                    loadSecurityMetrics(),
+                    loadApiDocumentation()
+                ]);
+                addLog('Dashboard data refreshed', 'info');
+            } catch (error) {
+                addLog(`Error refreshing data: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadSystemOverview() {
+            try {
+                const headers = apiKey ? { 'X-API-Key': apiKey } : {};
+                const response = await axios.get(`${apiBase}/status`, { headers });
+                
+                if (response.data.success) {
+                    const data = response.data.data;
+                    
+                    document.getElementById('systemOverview').innerHTML = `
+                        <p><strong>Status:</strong> <span class="status-indicator status-${data.system_status === 'healthy' ? 'healthy' : 'degraded'}">${data.system_status}</span></p>
+                        <p><strong>API Version:</strong> ${data.api_version}</p>
+                        <p><strong>Last Updated:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                    `;
+                    
+                    // Update metrics - handle both string and object format for multi_cloud_health
+                    const healthData = data.multi_cloud_health || {};
+                    const healthyProviders = healthData.healthy_providers || '0/0';
+                    const providers = healthData.providers || {};
+                    const totalProviders = Object.keys(providers).length;
+                    const healthyCount = healthyProviders.split('/')[0] || '0';
+                    
+                    document.getElementById('overviewMetrics').innerHTML = `
+                        <div class="metric-item">
+                            <div class="metric-value">${healthyCount}</div>
+                            <div class="metric-label">Healthy Providers</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${totalProviders}</div>
+                            <div class="metric-label">Total Providers</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${data.security_metrics && data.security_metrics.active_api_keys ? data.security_metrics.active_api_keys : 'N/A'}</div>
+                            <div class="metric-label">API Keys</div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('systemOverview').innerHTML = `<p class="error-message">Failed to load system overview: ${response.data.message || 'Unknown error'}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('systemOverview').innerHTML = `<p class="error-message">Error loading system overview: ${error.message}</p>`;
+            }
+        }
+
+        async function loadProvidersStatus() {
+            try {
+                const headers = apiKey ? { 'X-API-Key': apiKey } : {};
+                const response = await axios.get(`${apiBase}/health`, { headers });
+                
+                if (response.data.success) {
+                    const providers = response.data.data.providers;
+                    let html = '';
+                    
+                    for (const [name, data] of Object.entries(providers)) {
+                        const statusClass = data.status === 'healthy' ? 'status-healthy' : 'status-degraded';
+                        html += `
+                            <div class="provider-card">
+                                <div class="provider-name">${name.toUpperCase()}</div>
+                                <div class="provider-details">
+                                    <span class="status-indicator ${statusClass}">${data.status}</span>
+                                    <span class="response-time">${data.response_time_ms}ms</span>
+                                </div>
+                                <div style="font-size: 12px; color: #4a5568; margin-top: 5px;">
+                                    ${data.response_data ? data.response_data.service : 'Service info unavailable'}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('providersStatus').innerHTML = html;
+                    
+                    // Update performance chart
+                    updatePerformanceChart(providers);
+                }
+            } catch (error) {
+                document.getElementById('providersStatus').innerHTML = `<p class="error-message">Error loading providers: ${error.message}</p>`;
+            }
+        }
+
+        async function loadSecurityMetrics() {
+            try {
+                if (!apiKey) {
+                    document.getElementById('securityMetrics').innerHTML = '<p>API key required for security metrics</p>';
+                    return;
+                }
+                
+                const headers = { 'X-API-Key': apiKey };
+                const response = await axios.get(`${apiBase}/metrics`, { headers });
+                
+                if (response.data.success) {
+                    const data = response.data.data;
+                    const metrics = data.security || {};
+                    
+                    document.getElementById('securityMetrics').innerHTML = `
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-value">${metrics.total_requests || 0}</div>
+                                <div class="metric-label">Total Requests</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">${metrics.rate_limit_violations || 0}</div>
+                                <div class="metric-label">Rate Limit Hits</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">${metrics.authentication_failures || 0}</div>
+                                <div class="metric-label">Auth Failures</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">${metrics.blocked_ips || 0}</div>
+                                <div class="metric-label">Blocked IPs</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('securityMetrics').innerHTML = `<p class="error-message">Failed to load security metrics: ${response.data.message || 'Unknown error'}</p>`;
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 403) {
+                    document.getElementById('securityMetrics').innerHTML = '<p class="error-message">Admin permission required for security metrics</p>';
+                } else {
+                    document.getElementById('securityMetrics').innerHTML = `<p class="error-message">Error loading security metrics: ${error.message}</p>`;
+                }
+            }
+        }
+
+        async function loadApiDocumentation() {
+            try {
+                const response = await axios.get(`${apiBase}/docs`);
+                
+                if (response.data.success) {
+                    const docs = response.data.data;
+                    let html = '<div style="font-size: 14px;">';
+                    
+                    for (const [endpoint, info] of Object.entries(docs.endpoints)) {
+                        html += `
+                            <div style="margin-bottom: 10px; padding: 8px; background: #f7fafc; border-radius: 4px;">
+                                <strong>${info.method || 'GET'} ${endpoint}</strong><br>
+                                <span style="color: #4a5568; font-size: 12px;">${info.description}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    html += '</div>';
+                    document.getElementById('apiEndpoints').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('apiEndpoints').innerHTML = `<p class="error-message">Error loading API docs: ${error.message}</p>`;
+            }
+        }
+
+        // Chart functions
+        function initializeChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'AWS',
+                            data: [],
+                            borderColor: '#ff9900',
+                            backgroundColor: 'rgba(255, 153, 0, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Azure',
+                            data: [],
+                            borderColor: '#0078d4',
+                            backgroundColor: 'rgba(0, 120, 212, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'GCP',
+                            data: [],
+                            borderColor: '#4285f4',
+                            backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Response Time (ms)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Provider Response Times'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePerformanceChart(providers) {
+            const now = new Date().toLocaleTimeString();
+            
+            // Add new data point
+            performanceData.labels.push(now);
+            performanceData.aws.push(providers.aws ? providers.aws.response_time_ms : null);
+            performanceData.azure.push(providers.azure ? providers.azure.response_time_ms : null);
+            performanceData.gcp.push(providers.gcp ? providers.gcp.response_time_ms : null);
+            
+            // Keep only last 10 data points
+            if (performanceData.labels.length > 10) {
+                performanceData.labels.shift();
+                performanceData.aws.shift();
+                performanceData.azure.shift();
+                performanceData.gcp.shift();
+            }
+            
+            // Update chart
+            performanceChart.data.labels = performanceData.labels;
+            performanceChart.data.datasets[0].data = performanceData.aws;
+            performanceChart.data.datasets[1].data = performanceData.azure;
+            performanceChart.data.datasets[2].data = performanceData.gcp;
+            performanceChart.update();
+        }
+
+        // Testing functions
+        async function testHealth() {
+            await testEndpoint('GET', '/health', 'Health Check');
+        }
+
+        async function testStatus() {
+            await testEndpoint('GET', '/status', 'System Status');
+        }
+
+        async function testOrchestration() {
+            await testEndpoint('POST', '/orchestrate', 'Orchestration', { provider: 'auto' });
+        }
+
+        async function testMetrics() {
+            await testEndpoint('GET', '/metrics', 'Security Metrics');
+        }
+
+        async function testEndpoint(method, endpoint, name, data = null) {
+            const resultsDiv = document.getElementById('testResults');
+            const startTime = Date.now();
+            
+            try {
+                const headers = apiKey ? { 'X-API-Key': apiKey } : {};
+                let response;
+                
+                if (method === 'POST') {
+                    response = await axios.post(`${apiBase}${endpoint}`, data, { headers });
+                } else {
+                    response = await axios.get(`${apiBase}${endpoint}`, { headers });
+                }
+                
+                const duration = Date.now() - startTime;
+                resultsDiv.innerHTML = `
+                    <div class="success-message">
+                        <strong>${name} Test: SUCCESS</strong><br>
+                        Duration: ${duration}ms<br>
+                        Status: ${response.status}<br>
+                        Response: ${JSON.stringify(response.data, null, 2).substring(0, 200)}...
+                    </div>
+                `;
+                
+                addLog(`${name} test completed successfully (${duration}ms)`, 'success');
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error-message">
+                        <strong>${name} Test: FAILED</strong><br>
+                        Error: ${error.message}<br>
+                        ${error.response ? `Status: ${error.response.status}` : ''}
+                    </div>
+                `;
+                
+                addLog(`${name} test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Logging function
+        function addLog(message, level = 'info') {
+            const logsContainer = document.getElementById('activityLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logClass = `log-level-${level}`;
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="${logClass}">${level.toUpperCase()}</span>
+                ${message}
+            `;
+            
+            logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+            
+            // Keep only last 50 log entries
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.lastChild);
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
