@@ -508,12 +508,22 @@ docker-compose logs -f api
 
 ### Cost Analysis
 
-FISO includes a cost analysis tool to help with cloud provider selection:
+FISO includes an intelligent cost analysis tool with AI-powered optimization insights:
 
 ```powershell
-# Analyze AWS Lambda pricing
+# Basic AWS Lambda pricing analysis
 python predictor/cost_fetcher.py
+
+# AI-Enhanced cost analysis with optimization recommendations
+python -c "from predictor.cost_fetcher import get_lambda_pricing; print(get_lambda_pricing('us-east-1', enhanced=True))"
 ```
+
+**🤖 NEW: AI-Enhanced Features:**
+- **Spot Savings Detection**: Identifies 15-45% cost reduction opportunities
+- **Multi-Provider Comparison**: Compares AWS, Azure, GCP for best value
+- **Sustainability Analysis**: Carbon footprint scoring and green energy metrics
+- **Market Intelligence**: Optimal deployment timing and demand forecasting
+- **Natural Language Insights**: Human-readable optimization recommendations
 
 ### Management Commands
 
