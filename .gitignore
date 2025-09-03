@@ -15,7 +15,22 @@ __pycache__/
 *.pyc
 .env
 venv/
+.venv/
 gcp-credentials.json
+
+# Database files (production data should not be committed)
+*.db
+fiso_production.db
+
+# Logs
+*.log
+logs/
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
 
 # Kubernetes Local Secrets
 k8s/*secrets.local.yaml
@@ -36,3 +51,22 @@ D:\DS LiT\fiso\k8s\fiso-secrets.yaml
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Cache directories
+cache/
+.cache/
+
+# Build artifacts
+dist/
+build/
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# AI model files (too large for git)
+*.model
+*.pkl
+models/
