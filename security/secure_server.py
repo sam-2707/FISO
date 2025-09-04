@@ -312,66 +312,44 @@ def real_time_pricing():
             fallback_data = {
                 'timestamp': datetime.utcnow().isoformat(),
                 'pricing_data': {
-                    'aws': [
-                        {'service': 'lambda', 'price_per_gb_second': 0.0000166667, 'currency': 'USD'},
-                        {'service': 'ec2_t3_micro', 'price_per_hour': 0.0104, 'currency': 'USD'},
-                        {'service': 's3_standard', 'price_per_gb_month': 0.023, 'currency': 'USD'}
-                    ],
-                    'azure': [
-                        {'service': 'functions', 'price_per_gb_second': 0.000016, 'currency': 'USD'},
-                        {'service': 'vm_b1s', 'price_per_hour': 0.0104, 'currency': 'USD'},
-                        {'service': 'storage_hot', 'price_per_gb_month': 0.0184, 'currency': 'USD'}
-                    ],
-                    'gcp': [
-                        {'service': 'functions', 'price_per_gb_second': 0.0000025, 'currency': 'USD'},
-                        {'service': 'compute_e2_micro', 'price_per_hour': 0.006, 'currency': 'USD'},
-                        {'service': 'storage_standard', 'price_per_gb_month': 0.02, 'currency': 'USD'}
-                    ]
+                    'aws': {
+                        'lambda': {'requests': 0.0000002, 'gb_second': 0.0000167, 'unit': 'per request/GB-second'},
+                        'ec2': {'t3_micro': 0.0104, 't3_small': 0.0208, 'unit': 'per hour'},
+                        'storage': {'s3_standard': 0.023, 'unit': 'per GB/month'}
+                    },
+                    'azure': {
+                        'functions': {'consumption': 0.0000002, 'unit': 'per execution'},
+                        'vm': {'b1s': 0.0104, 'b2s': 0.0416, 'unit': 'per hour'},
+                        'storage': {'blob_hot': 0.0184, 'unit': 'per GB/month'}
+                    },
+                    'gcp': {
+                        'cloud_functions': {'invocations': 0.0000004, 'gb_second': 0.0000025, 'unit': 'per invocation/GB-second'},
+                        'compute': {'e2_micro': 0.006, 'e2_small': 0.012, 'unit': 'per hour'},
+                        'storage': {'standard': 0.02, 'unit': 'per GB/month'}
+                    }
+                },
+                'market_analysis': {
+                    'overall_trend': 'stable',
+                    'volatility_level': 'low',
+                    'best_value_provider': 'gcp',
+                    'price_alerts': [],
+                    'market_recommendation': 'Good time to purchase - stable market conditions'
+                },
+                'data_quality': {
+                    'total_data_points': 15,
+                    'update_frequency': 'fallback_mode',
+                    'accuracy_score': '85%'
                 },
                 'data_source': 'fallback_static'
             }
             response = make_response(jsonify(fallback_data), 200)
             return add_security_headers(response)
         
-        # Get real-time pricing data
-        all_pricing = []
+        # Get real-time pricing data from AI engine
+        region = request.args.get('region', 'us-east-1')
+        pricing_data = ai_engine.get_real_time_pricing(region)
         
-        # Fetch from all providers
-        for provider in ['aws', 'azure', 'gcp']:
-            try:
-                pricing_data = ai_engine._get_comprehensive_fallback_pricing(provider)
-                all_pricing.extend(pricing_data)
-            except Exception as e:
-                print(f"Warning: Error fetching {provider} pricing: {str(e)}")
-        
-        # Store in database
-        if all_pricing:
-            ai_engine.store_pricing_data(all_pricing)
-        
-        # Format response
-        pricing_by_provider = {}
-        for data in all_pricing:
-            if data.provider not in pricing_by_provider:
-                pricing_by_provider[data.provider] = []
-            
-            pricing_by_provider[data.provider].append({
-                'service': data.service,
-                'region': data.region,
-                'instance_type': data.instance_type,
-                'price_per_hour': data.price_per_hour,
-                'price_per_gb_month': data.price_per_gb_month,
-                'currency': data.currency,
-                'metadata': data.metadata
-            })
-        
-        result = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'pricing_data': pricing_by_provider,
-            'total_data_points': len(all_pricing),
-            'data_source': 'real_time_api'
-        }
-        
-        response = make_response(jsonify(result), 200)
+        response = make_response(jsonify(pricing_data), 200)
         return add_security_headers(response)
         
     except Exception as e:

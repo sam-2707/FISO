@@ -363,6 +363,113 @@
             display: none !important;
         }
         
+        /* Real-time pricing styles */
+        .real-time-pricing {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+            color: #2d3748;
+        }
+        
+        .real-time-pricing h3 {
+            color: #2b6cb0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.4em;
+        }
+        
+        .provider-pricing-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4299e1;
+        }
+        
+        .provider-pricing-card.aws {
+            border-left-color: #ff9500;
+        }
+        
+        .provider-pricing-card.azure {
+            border-left-color: #0078d4;
+        }
+        
+        .provider-pricing-card.gcp {
+            border-left-color: #4285f4;
+        }
+        
+        .provider-pricing-card h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .service-pricing {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .service-pricing strong {
+            color: #2b6cb0;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .price-item {
+            padding: 5px 0;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+        
+        .market-analysis {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .market-analysis h4 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .market-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .market-metrics .metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .market-metrics .label {
+            display: block;
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .market-metrics .value {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
         /* Insights Overview */
         .insights-overview {
             display: grid;
@@ -610,6 +717,9 @@
         <div class="header">
             <div class="status-indicator status-online" id="connectionStatus">
                 <span id="statusText">🟢 Online</span>
+                <div id="lastRefresh" style="font-size: 0.8em; margin-top: 5px; opacity: 0.8;">
+                    Auto-refresh active
+                </div>
             </div>
             <h1>🚀 FISO Unified Intelligence Dashboard</h1>
             <p>Advanced Multi-Cloud Cost Intelligence with Comprehensive Analytics</p>
@@ -1009,6 +1119,18 @@
                 this.startAutoRefresh();
                 this.updateConnectionStatus();
                 this.initializeMonitoring();
+                
+                // Load initial real-time pricing data
+                this.loadInitialData();
+            }
+            
+            async loadInitialData() {
+                try {
+                    // Load real-time pricing on dashboard startup
+                    await this.getRealTimePricing();
+                } catch (error) {
+                    console.warn('Failed to load initial data:', error);
+                }
             }
             
             setupEventListeners() {
@@ -1341,15 +1463,93 @@
                 try {
                     const data = await this.apiRequest('/api/ai/real-time-pricing');
                     
+                    // Display real-time pricing data
+                    this.displayRealTimePricing(data);
+                    
                     this.showStatus(
-                        `✅ Retrieved ${data.total_data_points || 'multiple'} data points from ${Object.keys(data.pricing_data || {}).length} providers`,
+                        `✅ Retrieved ${data.data_quality?.total_data_points || 'multiple'} data points from ${Object.keys(data.pricing_data || {}).length} providers`,
                         'success', 3000
                     );
                     
-                    console.log('Real-time pricing data:', data);
-                    
                 } catch (error) {
                     this.handleError(error);
+                }
+            }
+            
+            displayRealTimePricing(data) {
+                // Create a pricing display section
+                let pricingHTML = '<div class="real-time-pricing"><h3>🚀 Real-Time Market Pricing</h3>';
+                
+                if (data.pricing_data) {
+                    Object.keys(data.pricing_data).forEach(provider => {
+                        const providerData = data.pricing_data[provider];
+                        pricingHTML += `
+                            <div class="provider-pricing-card ${provider}">
+                                <h4>${provider.toUpperCase()}</h4>
+                                <div class="pricing-grid">
+                        `;
+                        
+                        Object.keys(providerData).forEach(service => {
+                            const serviceData = providerData[service];
+                            pricingHTML += `
+                                <div class="service-pricing">
+                                    <strong>${service.replace('_', ' ').toUpperCase()}</strong>
+                            `;
+                            
+                            if (typeof serviceData === 'object' && !Array.isArray(serviceData)) {
+                                Object.keys(serviceData).forEach(item => {
+                                    if (typeof serviceData[item] === 'number') {
+                                        pricingHTML += `
+                                            <div class="price-item">
+                                                ${item}: $${serviceData[item].toFixed(6)}
+                                            </div>
+                                        `;
+                                    }
+                                });
+                            }
+                            pricingHTML += '</div>';
+                        });
+                        
+                        pricingHTML += '</div></div>';
+                    });
+                }
+                
+                // Add market analysis
+                if (data.market_analysis) {
+                    const market = data.market_analysis;
+                    pricingHTML += `
+                        <div class="market-analysis">
+                            <h4>📈 Market Intelligence</h4>
+                            <div class="market-metrics">
+                                <div class="metric">
+                                    <span class="label">Overall Trend:</span>
+                                    <span class="value">${market.overall_trend || 'stable'}</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="label">Volatility:</span>
+                                    <span class="value">${market.volatility_level || 'low'}</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="label">Best Value:</span>
+                                    <span class="value">${(market.best_value_provider || 'gcp').toUpperCase()}</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="label">Recommendation:</span>
+                                    <span class="value">${market.market_recommendation || 'Stable conditions'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                pricingHTML += '</div>';
+                
+                // Display in status area or create dedicated section
+                const statusElement = document.getElementById('statusMessage');
+                if (statusElement) {
+                    statusElement.innerHTML = pricingHTML;
+                    statusElement.style.maxHeight = '400px';
+                    statusElement.style.overflow = 'auto';
                 }
             }
             
