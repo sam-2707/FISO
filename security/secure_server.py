@@ -220,6 +220,79 @@ def status():
 # PRODUCTION AI INTELLIGENCE ENDPOINTS
 # ========================================
 
+@app.route('/api/ai/live-recommendations', methods=['GET'])
+def get_live_recommendations():
+    """Get live AI recommendations for dashboard display"""
+    try:
+        # Mock professional recommendations for now
+        recommendations = [
+            {
+                'title': 'Implement Auto-Scaling Policies',
+                'description': 'Configure intelligent auto-scaling to reduce idle compute costs by 35-50%',
+                'impact_score': 0.85,
+                'confidence_score': 0.92,
+                'potential_savings': 4250.00,
+                'priority': 'high',
+                'implementation_effort': 'medium',
+                'category': 'cost_optimization'
+            },
+            {
+                'title': 'Reserved Instance Planning',
+                'description': 'Purchase reserved instances for predictable workloads to save 30-60%',
+                'impact_score': 0.75,
+                'confidence_score': 0.89,
+                'potential_savings': 3180.00,
+                'priority': 'high',
+                'implementation_effort': 'low',
+                'category': 'cost_optimization'
+            },
+            {
+                'title': 'CDN Implementation',
+                'description': 'Deploy global CDN to reduce latency by 40-60% for end users',
+                'impact_score': 0.80,
+                'confidence_score': 0.94,
+                'potential_savings': 0,
+                'priority': 'medium',
+                'implementation_effort': 'medium',
+                'category': 'performance'
+            },
+            {
+                'title': 'Storage Tier Optimization',
+                'description': 'Implement intelligent storage tiering to reduce costs by 25-45%',
+                'impact_score': 0.70,
+                'confidence_score': 0.87,
+                'potential_savings': 1890.00,
+                'priority': 'medium',
+                'implementation_effort': 'medium',
+                'category': 'cost_optimization'
+            },
+            {
+                'title': 'Zero-Trust Architecture',
+                'description': 'Implement zero-trust network security model for enhanced protection',
+                'impact_score': 0.95,
+                'confidence_score': 0.96,
+                'potential_savings': 0,
+                'priority': 'high',
+                'implementation_effort': 'high',
+                'category': 'security'
+            }
+        ]
+        
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'recommendations': recommendations,
+            'count': len(recommendations)
+        })
+        
+    except Exception as e:
+        print(f"Error getting live recommendations: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @app.route('/api/ai/comprehensive-analysis', methods=['POST'])
 def comprehensive_ai_analysis():
     """Comprehensive AI analysis with real market data"""
@@ -674,15 +747,15 @@ def generate_api_key():
         response = make_response(jsonify(error_response), 500)
         return add_security_headers(response)
 
-# Unified Dashboard Route - Serves all dashboard functionality in one page
+# Enterprise Dashboard Route - Serves the professional industry-standard dashboard
 @app.route('/', methods=['GET'])
 @app.route('/dashboard', methods=['GET'])
-@app.route('/unified_dashboard.html', methods=['GET'])
-def unified_dashboard():
-    """Serve the unified FISO dashboard with all features integrated"""
+@app.route('/enterprise_dashboard.html', methods=['GET'])
+def enterprise_dashboard():
+    """Serve the enterprise FISO dashboard with professional industry-standard design"""
     try:
-        # Get the unified dashboard file path
-        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'unified_dashboard.html')
+        # Get the enterprise dashboard file path
+        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'enterprise_dashboard.html')
         
         # Read and serve the dashboard file
         with open(dashboard_path, 'r', encoding='utf-8') as f:
@@ -696,17 +769,18 @@ def unified_dashboard():
         return response
         
     except Exception as e:
-        return make_response(f"Error loading unified dashboard: {str(e)}", 500)
+        return make_response(f"Error loading enterprise dashboard: {str(e)}", 500)
 
-# Legacy dashboard routes for backwards compatibility (redirect to unified)
+# Legacy dashboard routes for backwards compatibility (redirect to enterprise)
+@app.route('/unified_dashboard.html', methods=['GET'])
 @app.route('/ai_dashboard.html', methods=['GET'])
 @app.route('/enhanced_ai_dashboard.html', methods=['GET'])
 @app.route('/compatible_dashboard.html', methods=['GET'])
 @app.route('/simple_dashboard.html', methods=['GET'])
 def legacy_dashboard_redirect():
-    """Redirect legacy dashboard routes to the unified dashboard"""
+    """Redirect legacy dashboard routes to the enterprise dashboard"""
     from flask import redirect, url_for
-    return redirect(url_for('unified_dashboard'), code=301)
+    return redirect(url_for('enterprise_dashboard'), code=301)
 
 @app.route('/ai_predictor_integration.js', methods=['GET'])
 def ai_predictor_integration_js():
@@ -731,7 +805,14 @@ def ai_predictor_integration_js():
 
 @app.route('/', methods=['GET'])
 def root():
-    """Root endpoint - API information"""
+    """Root endpoint - serves the enterprise dashboard"""
+    return enterprise_dashboard()
+
+# API Info endpoint for those who need it
+@app.route('/api', methods=['GET'])
+@app.route('/info', methods=['GET']) 
+def api_info():
+    """API information endpoint"""
     info = {
         "name": "FISO Secure Multi-Cloud API with Production AI Intelligence",
         "version": "3.0.0-production-ai",
