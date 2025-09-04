@@ -22,13 +22,26 @@ except ImportError:
 
 # Import Production AI Engine
 try:
-    from production_ai_engine import ProductionAIEngine
+    from lightweight_ai_engine import EnhancedAIEngine
     AI_ENGINE_AVAILABLE = True
-    print("✅ Production AI Engine imported successfully")
+    print("✅ Lightweight AI Engine imported successfully")
+    AIEngineClass = EnhancedAIEngine
 except ImportError as e:
-    print(f"⚠️  Production AI Engine not available: {e}")
-    AI_ENGINE_AVAILABLE = False
-    ProductionAIEngine = None
+    try:
+        from enhanced_ai_engine import EnhancedAIEngine
+        AI_ENGINE_AVAILABLE = True
+        print("✅ Enhanced AI Engine imported successfully (fallback)")
+        AIEngineClass = EnhancedAIEngine
+    except ImportError as e2:
+        try:
+            from production_ai_engine import ProductionAIEngine
+            AI_ENGINE_AVAILABLE = True
+            print("✅ Production AI Engine imported successfully (fallback)")
+            AIEngineClass = ProductionAIEngine
+        except ImportError as e3:
+            print(f"⚠️  No AI Engine available: {e}, {e2}, {e3}")
+            AI_ENGINE_AVAILABLE = False
+            AIEngineClass = None
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for web dashboard access
@@ -40,8 +53,8 @@ secure_api = SecureMultiCloudAPI()
 ai_engine = None
 if AI_ENGINE_AVAILABLE:
     try:
-        ai_engine = ProductionAIEngine()
-        print("✅ Production AI Engine initialized successfully")
+        ai_engine = AIEngineClass()
+        print("✅ AI Engine initialized successfully")
     except Exception as e:
         print(f"❌ Error initializing AI Engine: {str(e)}")
         ai_engine = None
@@ -683,12 +696,15 @@ def generate_api_key():
         response = make_response(jsonify(error_response), 500)
         return add_security_headers(response)
 
-@app.route('/compatible_dashboard.html', methods=['GET'])
-def compatible_dashboard():
-    """Serve the compatible dashboard HTML file with table-based layout"""
+# Unified Dashboard Route - Serves all dashboard functionality in one page
+@app.route('/', methods=['GET'])
+@app.route('/dashboard', methods=['GET'])
+@app.route('/unified_dashboard.html', methods=['GET'])
+def unified_dashboard():
+    """Serve the unified FISO dashboard with all features integrated"""
     try:
-        # Get the dashboard file path
-        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'compatible_dashboard.html')
+        # Get the unified dashboard file path
+        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'unified_dashboard.html')
         
         # Read and serve the dashboard file
         with open(dashboard_path, 'r', encoding='utf-8') as f:
@@ -702,70 +718,17 @@ def compatible_dashboard():
         return response
         
     except Exception as e:
-        return make_response(f"Error loading dashboard: {str(e)}", 500)
+        return make_response(f"Error loading unified dashboard: {str(e)}", 500)
 
-@app.route('/simple_dashboard.html', methods=['GET'])
-def simple_dashboard():
-    """Serve the simple dashboard HTML file for testing"""
-    try:
-        # Get the dashboard file path
-        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'simple_dashboard.html')
-        
-        # Read and serve the dashboard file
-        with open(dashboard_path, 'r', encoding='utf-8') as f:
-            dashboard_content = f.read()
-        
-        response = make_response(dashboard_content)
-        response.headers['Content-Type'] = 'text/html; charset=utf-8'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        return response
-        
-    except Exception as e:
-        return make_response(f"Error loading simple dashboard: {str(e)}", 500)
-
+# Legacy dashboard routes for backwards compatibility (redirect to unified)
 @app.route('/ai_dashboard.html', methods=['GET'])
-def ai_dashboard():
-    """Serve the AI Intelligence dashboard HTML file"""
-    try:
-        # Get the dashboard file path
-        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'ai_dashboard.html')
-        
-        # Read and serve the dashboard file
-        with open(dashboard_path, 'r', encoding='utf-8') as f:
-            dashboard_content = f.read()
-        
-        response = make_response(dashboard_content)
-        response.headers['Content-Type'] = 'text/html; charset=utf-8'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        return response
-        
-    except Exception as e:
-        return make_response(f"Error loading AI dashboard: {str(e)}", 500)
-
 @app.route('/enhanced_ai_dashboard.html', methods=['GET'])
-def enhanced_ai_dashboard():
-    """Serve the Enhanced AI Predictor dashboard HTML file"""
-    try:
-        # Get the dashboard file path
-        dashboard_path = os.path.join(os.path.dirname(__file__), '..', 'dashboard', 'enhanced_ai_dashboard.html')
-        
-        # Read and serve the dashboard file
-        with open(dashboard_path, 'r', encoding='utf-8') as f:
-            dashboard_content = f.read()
-        
-        response = make_response(dashboard_content)
-        response.headers['Content-Type'] = 'text/html; charset=utf-8'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        return response
-        
-    except Exception as e:
-        return make_response(f"Error loading enhanced AI dashboard: {str(e)}", 500)
+@app.route('/compatible_dashboard.html', methods=['GET'])
+@app.route('/simple_dashboard.html', methods=['GET'])
+def legacy_dashboard_redirect():
+    """Redirect legacy dashboard routes to the unified dashboard"""
+    from flask import redirect, url_for
+    return redirect(url_for('unified_dashboard'), code=301)
 
 @app.route('/ai_predictor_integration.js', methods=['GET'])
 def ai_predictor_integration_js():
@@ -816,10 +779,10 @@ def root():
                 "trend_analysis": "/api/ai/trend-analysis"
             },
             "dashboards": {
-                "ai_intelligence": "/ai_dashboard.html",
-                "enhanced_ai_predictor": "/enhanced_ai_dashboard.html",
-                "compatible": "/compatible_dashboard.html",
-                "simple": "/simple_dashboard.html"
+                "unified_main": "/",
+                "unified_direct": "/unified_dashboard.html", 
+                "dashboard_alias": "/dashboard",
+                "features": "AI Intelligence • Multi-Cloud Comparison • API Testing • System Monitoring"
             }
         },
         "authentication": "API Key or JWT Token required"
@@ -846,11 +809,11 @@ if __name__ == '__main__':
     print(f"   • ML Predictions: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
     print(f"   • Smart Optimization: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
     
-    print("\n🎨 Dashboard Options:")
-    print("   http://localhost:5000/enhanced_ai_dashboard.html - 🚀 Enhanced AI Predictor (NEW & FEATURED)")
-    print("   http://localhost:5000/ai_dashboard.html         - 🤖 AI Intelligence Dashboard")
-    print("   http://localhost:5000/compatible_dashboard.html - 🌐 Multi-Cloud Dashboard")
-    print("   http://localhost:5000/simple_dashboard.html     - 🧪 Simple Testing Interface")
+    print("\n🎨 Unified Dashboard:")
+    print("   http://localhost:5000/                       - 🚀 FISO Unified Intelligence Dashboard (MAIN)")
+    print("   http://localhost:5000/unified_dashboard.html - 🎯 Direct Access to Unified Dashboard")
+    print("   http://localhost:5000/dashboard              - 📊 Alternative Dashboard Route")
+    print("\n   ✨ Features: AI Intelligence • Multi-Cloud Comparison • API Testing • System Monitoring")
     
     print("\n🎯 AI API Endpoints:")
     print("   POST /api/ai/comprehensive-analysis")
@@ -872,8 +835,8 @@ if __name__ == '__main__':
     
     print(f"\n🌐 Server starting on http://localhost:5000")
     print("=" * 70)
-    print("💡 TIP: Visit /enhanced_ai_dashboard.html for the latest AI Predictor experience!")
-    print("     Or try /ai_dashboard.html for the AI Intelligence dashboard!")
+    print("💡 TIP: Visit http://localhost:5000/ for the complete FISO Unified Intelligence Dashboard!")
+    print("     Features: AI Intelligence • Multi-Cloud Analysis • API Testing • Real-Time Monitoring")
     print("Press Ctrl+C to stop")
     
     app.run(host='0.0.0.0', port=5000, debug=True)

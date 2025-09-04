@@ -70,3 +70,10 @@ temp/
 *.model
 *.pkl
 models/
+
+# Dashboard files - Keep only essential ones
+dashboard/*_test.html
+dashboard/*_backup.html
+dashboard/*_old.html
+dashboard/*_draft.html
+dashboard/temp_*.html
