@@ -6,8 +6,28 @@ from flask_cors import CORS
 import sys
 import os
 import json
-from datetime import datetime
+import time
+from datetime import datetime, timezone
 import pandas as pd
+import secrets
+import logging
+from functools import wraps
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+# Configure logging
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Security configuration
+SECRET_KEY = os.getenv('SECRET_KEY', secrets.token_urlsafe(32))
+DEMO_MODE = os.getenv('DEMO_MODE', 'false').lower() == 'true'
 
 # Add security and predictor modules to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'security'))
@@ -20,30 +40,19 @@ except ImportError:
     print("Make sure fiso_security.py and secure_api.py are in the security/ directory")
     sys.exit(1)
 
-# Import Production AI Engine
+# Import AI Engine
 try:
     from lightweight_ai_engine import EnhancedAIEngine
     AI_ENGINE_AVAILABLE = True
-    print("✅ Lightweight AI Engine imported successfully")
+    print("✅ AI Engine imported successfully")
     AIEngineClass = EnhancedAIEngine
 except ImportError as e:
-    try:
-        from enhanced_ai_engine import EnhancedAIEngine
-        AI_ENGINE_AVAILABLE = True
-        print("✅ Enhanced AI Engine imported successfully (fallback)")
-        AIEngineClass = EnhancedAIEngine
-    except ImportError as e2:
-        try:
-            from production_ai_engine import ProductionAIEngine
-            AI_ENGINE_AVAILABLE = True
-            print("✅ Production AI Engine imported successfully (fallback)")
-            AIEngineClass = ProductionAIEngine
-        except ImportError as e3:
-            print(f"⚠️  No AI Engine available: {e}, {e2}, {e3}")
-            AI_ENGINE_AVAILABLE = False
-            AIEngineClass = None
+    print(f"⚠️  No AI Engine available: {e}")
+    AI_ENGINE_AVAILABLE = False
+    AIEngineClass = None
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = SECRET_KEY
 CORS(app)  # Enable CORS for web dashboard access
 
 # Initialize secure API
@@ -706,6 +715,49 @@ def trend_analysis():
         response = make_response(jsonify(error_response), 500)
         return add_security_headers(response)
 
+@app.route('/api/session-info', methods=['GET'])
+def session_info():
+    """Provide session information including a temporary API key for the dashboard"""
+    try:
+        if DEMO_MODE and 'DEMO_API_KEY' in app.config:
+            # Return stored demo credentials
+            session_data = {
+                "success": True,
+                "api_key": app.config['DEMO_API_KEY'],
+                "session_id": "demo_session",
+                "permissions": ["read", "orchestrate"],
+                "expires_in": 3600,  # 1 hour
+                "mode": "demo",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            # Generate a temporary API key for this session
+            temp_key = secure_api.security.generate_api_key("dashboard_session", ["read", "orchestrate"])
+            
+            session_data = {
+                "success": True,
+                "api_key": temp_key['api_key'],
+                "session_id": temp_key.get('user_id', 'session_' + str(int(time.time()))),
+                "permissions": temp_key.get('permissions', ["read", "orchestrate"]),
+                "expires_in": 3600,  # 1 hour
+                "mode": "production",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        
+        response = make_response(jsonify(session_data), 200)
+        return add_security_headers(response)
+        
+    except Exception as e:
+        logger.error(f"Session info error: {str(e)}")
+        error_response = {
+            "success": False,
+            "error": "Session initialization failed",
+            "details": str(e) if DEMO_MODE else "Internal server error",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        response = make_response(jsonify(error_response), 500)
+        return add_security_headers(response)
+
 @app.route('/auth/generate-key', methods=['POST'])
 def generate_api_key():
     """Generate new API key"""
@@ -818,7 +870,7 @@ def api_info():
         "version": "3.0.0-production-ai",
         "description": "Enterprise-grade secure API for multi-cloud orchestration with AI-powered cost optimization",
         "status": "operational",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "ai_status": {
             "ai_engine": "operational" if ai_engine else "unavailable",
             "real_time_pricing": AI_ENGINE_AVAILABLE,
@@ -851,26 +903,34 @@ def api_info():
     return add_security_headers(response)
 
 if __name__ == '__main__':
-    print("🚀 Starting FISO Secure API Server with Production AI Intelligence...")
-    print("=" * 70)
+    logger.info("🚀 Starting FISO Secure API Server with Production AI Intelligence...")
+    logger.info("=" * 70)
     
-    # Generate demo credentials
-    demo_key = secure_api.security.generate_api_key("demo_user", ["read", "orchestrate", "admin"])
-    demo_jwt = secure_api.security.generate_jwt_token("demo_user", ["read", "orchestrate"])
+    # Only show demo credentials in demo mode
+    if DEMO_MODE:
+        # Generate demo credentials
+        demo_key = secure_api.security.generate_api_key("demo_user", ["read", "orchestrate", "admin"])
+        demo_jwt = secure_api.security.generate_jwt_token("demo_user", ["read", "orchestrate"])
+        
+        logger.info("🔧 DEMO MODE ENABLED")
+        logger.info("� Demo Credentials Available - Use /api/session-info endpoint")
+        
+        # Store demo credentials for session endpoint (don't print them)
+        app.config['DEMO_API_KEY'] = demo_key['api_key']
+        app.config['DEMO_JWT_TOKEN'] = demo_jwt
+    else:
+        logger.info("🔒 PRODUCTION MODE - Use proper authentication")
     
-    print(f"🔑 Demo API Key: {demo_key['api_key']}")
-    print(f"🎫 Demo JWT Token: {demo_jwt}")
-    
-    print("\n🤖 AI Intelligence Features:")
+    logger.info("\n🤖 AI Intelligence Features:")
     ai_status = "✅ OPERATIONAL" if ai_engine else "❌ UNAVAILABLE"
-    print(f"   • AI Engine: {ai_status}")
-    print(f"   • Real-Time Pricing: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
-    print(f"   • ML Predictions: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
-    print(f"   • Smart Optimization: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
+    logger.info(f"   • AI Engine: {ai_status}")
+    logger.info(f"   • Real-Time Pricing: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
+    logger.info(f"   • ML Predictions: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
+    logger.info(f"   • Smart Optimization: {'✅' if AI_ENGINE_AVAILABLE else '❌'}")
     
-    print("\n🎨 Unified Dashboard:")
-    print("   http://localhost:5000/                       - 🚀 FISO Unified Intelligence Dashboard (MAIN)")
-    print("   http://localhost:5000/unified_dashboard.html - 🎯 Direct Access to Unified Dashboard")
+    print("\n🎨 Enterprise Dashboard:")
+    print("   http://localhost:5000/                       - 🚀 FISO Enterprise Intelligence Dashboard (MAIN)")
+    print("   http://localhost:5000/enterprise_dashboard.html - 📊 Direct Access to Enterprise Dashboard")
     print("   http://localhost:5000/dashboard              - 📊 Alternative Dashboard Route")
     print("\n   ✨ Features: AI Intelligence • Multi-Cloud Comparison • API Testing • System Monitoring")
     
@@ -881,9 +941,11 @@ if __name__ == '__main__':
     print("   POST /api/ai/optimization-recommendations")
     print("   GET  /api/ai/trend-analysis")
     
-    print("\n🧪 Test Commands:")
-    print(f"   curl -H 'X-API-Key: {demo_key['api_key']}' http://localhost:5000/health")
-    print(f"   curl -H 'X-API-Key: {demo_key['api_key']}' http://localhost:5000/api/ai/real-time-pricing")
+    if DEMO_MODE:
+        print("\n🧪 Test Commands (Demo Mode):")
+        print("   curl http://localhost:5000/api/session-info  # Get demo API key")
+        print("   curl http://localhost:5000/health")
+        print("   curl http://localhost:5000/api/ai/real-time-pricing")
     
     print("\n🔒 Security Features:")
     print("   ✅ JWT Authentication")
@@ -891,11 +953,19 @@ if __name__ == '__main__':
     print("   ✅ Rate Limiting")
     print("   ✅ CORS Support")
     print("   ✅ Security Headers")
+    print("   ✅ Environment-based Configuration")
     
-    print(f"\n🌐 Server starting on http://localhost:5000")
+    port = int(os.getenv('PORT', 5000))
+    debug_mode = os.getenv('FLASK_ENV', 'development') == 'development'
+    
+    print(f"\n🌐 Server starting on http://localhost:{port}")
     print("=" * 70)
-    print("💡 TIP: Visit http://localhost:5000/ for the complete FISO Unified Intelligence Dashboard!")
+    print("💡 TIP: Visit http://localhost:{port}/ for the complete FISO Enterprise Intelligence Dashboard!")
     print("     Features: AI Intelligence • Multi-Cloud Analysis • API Testing • Real-Time Monitoring")
+    
+    if debug_mode:
+        logger.warning("⚠️  Running in DEBUG mode - Use production WSGI server for production!")
+    
     print("Press Ctrl+C to stop")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

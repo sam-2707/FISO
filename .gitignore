@@ -26,6 +26,14 @@ fiso_production.db
 *.log
 logs/
 
+# Development status and temporary documentation files
+*STATUS*.md
+*COMPLETE*.md
+*ENHANCEMENT*.md
+*NOVEL*.md
+*SUMMARY*.md
+*ISSUES*.md
+
 # IDE files
 .vscode/settings.json
 .idea/

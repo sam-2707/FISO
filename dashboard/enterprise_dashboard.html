@@ -1502,7 +1502,8 @@
     <script>
         class FISOEnterpriseApp {
             constructor() {
-                this.apiKey = 'fiso_6aHenS8EtK1kt3olp70cnyiUeex1MRPJ-kMyAOK-RcU';
+                // Remove hardcoded API key - get from server or environment
+                this.apiKey = null;
                 this.baseUrl = window.location.origin;
                 this.activeTab = 'dashboard';
                 this.charts = {};
@@ -1514,6 +1515,9 @@
             
             async init() {
                 console.log('🚀 Initializing FISO Enterprise Platform...');
+                
+                // Get API key from server endpoint or session
+                await this.initializeAuth();
                 
                 this.setupEventListeners();
                 this.initializeCharts();
@@ -1529,7 +1533,46 @@
                 } catch (error) {
                     console.error('Initialization error:', error);
                     this.showSystemStatus('degraded');
+                    this.showUserError('Failed to initialize application. Please refresh the page.');
                 }
+            }
+
+            async initializeAuth() {
+                try {
+                    // Try to get API key from server session or dedicated endpoint
+                    const response = await fetch('/api/session-info');
+                    if (response.ok) {
+                        const sessionInfo = await response.json();
+                        this.apiKey = sessionInfo.api_key;
+                    } else {
+                        // Fallback: use a temporary demo key (better than hardcoded)
+                        this.apiKey = 'demo_key_' + Math.random().toString(36).substr(2, 9);
+                        console.warn('Using temporary demo API key. Implement proper authentication.');
+                    }
+                } catch (error) {
+                    console.error('Auth initialization failed:', error);
+                    this.showUserError('Authentication failed. Some features may not work.');
+                }
+            }
+
+            showUserError(message) {
+                // Create or update error notification
+                let errorContainer = document.getElementById('global-error-container');
+                if (!errorContainer) {
+                    errorContainer = document.createElement('div');
+                    errorContainer.id = 'global-error-container';
+                    errorContainer.className = 'alert alert-danger position-fixed';
+                    errorContainer.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                    document.body.appendChild(errorContainer);
+                }
+                
+                errorContainer.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span>${message}</span>
+                        <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                `;
             }
 
             // Enhanced Tab System
@@ -3025,17 +3068,8 @@
             
             async loadPricingData() {
                 try {
-                    const response = await this.apiRequest('/api/ai/real-time-pricing', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            lambda_invocations: 50000000,
-                            lambda_duration: 4000,
-                            lambda_memory: 3008,
-                            storage_gb: 5000,
-                            compute_hours: 2000,
-                            estimated_monthly_spend: 25000
-                        })
-                    });
+                    const response = await this.apiRequest('/api/ai/real-time-pricing');
+                    // Note: Real-time pricing is GET only - no payload needed
                     
                     if (response.success) {
                         this.currentPricingData = response.data;
@@ -3258,20 +3292,11 @@
             
             async loadRealTimePricing() {
                 try {
-                    const response = await this.apiRequest('/api/ai/real-time-pricing', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            lambda_invocations: 50000000,
-                            lambda_duration: 4000,
-                            lambda_memory: 3008,
-                            storage_gb: 5000,
-                            compute_hours: 2000,
-                            estimated_monthly_spend: 25000
-                        })
-                    });
+                    const response = await this.apiRequest('/api/ai/real-time-pricing');
+                    // Note: Real-time pricing is GET only - no payload needed
                     
-                    if (response.success && response.data) {
-                        this.updateRealTimePricingDisplay(response.data);
+                    if (response && response.pricing_data) {
+                        this.updateRealTimePricingDisplay(response.pricing_data);
                         console.log('✅ Real-time pricing updated');
                     }
                 } catch (error) {
@@ -3635,11 +3660,26 @@
             
             async apiRequest(endpoint, options = {}) {
                 const defaultOptions = {
+                    method: 'GET', // Default to GET
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': this.apiKey
+                        'Content-Type': 'application/json'
                     }
                 };
+                
+                // Add API key if available
+                if (this.apiKey && !this.apiKey.startsWith('demo_key_')) {
+                    defaultOptions.headers['X-API-Key'] = this.apiKey;
+                }
+                
+                // Automatically determine method based on endpoint if not specified
+                if (!options.method) {
+                    if (endpoint.includes('comprehensive-analysis') || 
+                        endpoint.includes('cost-prediction') || 
+                        endpoint.includes('optimization-recommendations')) {
+                        defaultOptions.method = 'POST';
+                    }
+                    // GET endpoints: real-time-pricing, trend-analysis, health, session-info
+                }
                 
                 const config = { ...defaultOptions, ...options };
                 
@@ -3647,12 +3687,14 @@
                     const response = await fetch(this.baseUrl + endpoint, config);
                     
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
                     }
                     
                     return await response.json();
                 } catch (error) {
                     console.error('API Request failed:', error);
+                    this.showUserError(`API request failed: ${error.message}`);
                     throw error;
                 }
             }

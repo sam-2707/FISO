@@ -1,0 +1,23 @@
+{
+  "name": "fiso-enterprise-frontend",
+  "version": "1.0.0",
+  "description": "FISO Enterprise Frontend Tools",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack serve --mode development",
+    "watch": "webpack --mode development --watch"
+  },
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
+    "css-loader": "^6.8.1",
+    "style-loader": "^3.3.3",
+    "html-webpack-plugin": "^5.5.3",
+    "copy-webpack-plugin": "^11.0.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "alpinejs": "^3.13.3"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "database": {
+    "url": "sqlite:///data/fiso_enterprise.db",
+    "pool_size": 10,
+    "max_overflow": 20
+  },
+  "redis": {
+    "url": "redis://localhost:6379",
+    "db": 0,
+    "decode_responses": true
+  },
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 4,
+    "log_level": "info"
+  },
+  "security": {
+    "jwt_secret": "your-secret-key-change-in-production",
+    "jwt_algorithm": "HS256",
+    "jwt_expiration": 3600
+  },
+  "external_apis": {
+    "aws_pricing_api": {
+      "enabled": true,
+      "rate_limit": 100
+    },
+    "azure_pricing_api": {
+      "enabled": true,
+      "rate_limit": 100
+    },
+    "gcp_pricing_api": {
+      "enabled": true,
+      "rate_limit": 100
+    }
+  },
+  "monitoring": {
+    "enable_metrics": true,
+    "metrics_port": 9090,
+    "log_requests": true
+  }
+}
