@@ -42,10 +42,10 @@ except ImportError:
 
 # Import AI Engine
 try:
-    from lightweight_ai_engine import EnhancedAIEngine
+    from lightweight_ai_engine import LightweightAIEngine
     AI_ENGINE_AVAILABLE = True
     print("✅ AI Engine imported successfully")
-    AIEngineClass = EnhancedAIEngine
+    AIEngineClass = LightweightAIEngine
 except ImportError as e:
     print(f"⚠️  No AI Engine available: {e}")
     AI_ENGINE_AVAILABLE = False

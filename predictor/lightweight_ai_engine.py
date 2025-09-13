@@ -40,7 +40,7 @@ class CostPrediction:
     trend_analysis: Dict[str, Any]
     risk_factors: List[str]
 
-class EnhancedAIEngine:
+class LightweightAIEngine:
     """Enhanced AI intelligence engine with intelligent algorithms"""
     
     def __init__(self):
@@ -48,6 +48,17 @@ class EnhancedAIEngine:
         self.db_path = os.path.join(os.path.dirname(__file__), '..', 'security', 'fiso_production.db')
         self.market_data = {}
         self.historical_data = []
+        
+        # Initialize real data pipeline for live pricing
+        try:
+            from real_time_pipeline import RealTimeDataPipeline
+            self.data_pipeline = RealTimeDataPipeline(self.db_path)
+            self.use_real_data = True
+            logger.info("[OK] Real data pipeline connected to AI engine")
+        except ImportError:
+            logger.warning("[WARNING] Real data pipeline not available, using fallback data")
+            self.data_pipeline = None
+            self.use_real_data = False
         self.pricing_cache = {}
         
         # Initialize database
@@ -59,7 +70,7 @@ class EnhancedAIEngine:
         # Generate initial historical data
         self._generate_historical_data()
         
-        logger.info("✅ Enhanced AI Engine initialized successfully")
+        logger.info("[OK] Enhanced AI Engine initialized successfully")
     
     def _init_database(self):
         """Initialize SQLite database for storing AI data"""
@@ -103,10 +114,10 @@ class EnhancedAIEngine:
             
             conn.commit()
             conn.close()
-            logger.info("✅ AI database initialized")
+            logger.info("[OK] AI database initialized")
             
         except Exception as e:
-            logger.error(f"❌ Database initialization error: {str(e)}")
+            logger.error(f"[ERROR] Database initialization error: {str(e)}")
     
     def _init_market_simulation(self):
         """Initialize market data simulation"""
@@ -1136,11 +1147,11 @@ class EnhancedAIEngine:
                             }
                         })
             
-            logger.info(f"✅ Retrieved {len(historical_data)} historical pricing records for {provider}")
+            logger.info(f"[OK] Retrieved {len(historical_data)} historical pricing records for {provider}")
             return historical_data
             
         except Exception as e:
-            logger.error(f"❌ Error retrieving historical pricing for {provider}: {str(e)}")
+            logger.error(f"[ERROR] Error retrieving historical pricing for {provider}: {str(e)}")
             # Return fallback data
             return self._generate_fallback_historical_data(provider, days)
     
@@ -1629,7 +1640,7 @@ def test_enhanced_ai_engine():
     try:
         print("🧪 Testing Enhanced AI Engine...")
         
-        engine = EnhancedAIEngine()
+        engine = LightweightAIEngine()
         print("✅ Engine initialization successful")
         
         # Test real-time pricing

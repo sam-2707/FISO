@@ -2,6 +2,7 @@ import axios from 'axios';
 
 class ApiService {
   constructor() {
+    // Use relative URLs to work with React's proxy in development
     this.baseURL = process.env.NODE_ENV === 'production' 
       ? process.env.REACT_APP_API_URL || '/api'
       : '/api';
@@ -57,7 +58,7 @@ class ApiService {
 
   async initialize() {
     try {
-      const sessionResponse = await axios.get(`${this.baseURL}/session-info`);
+      const sessionResponse = await axios.get('/api/session-info');
       
       if (sessionResponse.data.success) {
         this.sessionInfo = sessionResponse.data;
