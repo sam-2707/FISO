@@ -3,6 +3,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Dashboard from './components/Dashboard/Dashboard';
+import CloudDashboard from './components/CloudDashboard';
+import IndustryOperationsDashboard from './components/IndustryOperationsDashboard';
+import Navigation from './components/Navigation';
 
 const theme = createTheme({
   palette: {
@@ -59,9 +62,12 @@ function App() {
       <CssBaseline />
       <Router>
         <div className="App">
+          <Navigation />
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<CloudDashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/operations" element={<IndustryOperationsDashboard />} />
+            <Route path="/operational" element={<CloudDashboard />} />
           </Routes>
         </div>
       </Router>

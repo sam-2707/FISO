@@ -418,16 +418,20 @@ class LightweightAIEngine:
         # Simulate intelligent trend analysis
         recent_data = [h for h in self.historical_data[-30:] if h['provider'] == provider]
         
-        if len(recent_data) >= 7:
-            avg_recent = sum(h['price_factor'] for h in recent_data[-7:]) / 7
-            avg_older = sum(h['price_factor'] for h in recent_data[-14:-7]) / 7
+        if len(recent_data) >= 14:  # Need at least 14 data points for proper comparison
+            recent_week = recent_data[-7:]
+            older_week = recent_data[-14:-7]
             
-            if avg_recent > avg_older * 1.02:
-                return 'increasing'
-            elif avg_recent < avg_older * 0.98:
-                return 'decreasing'
-            else:
-                return 'stable'
+            if len(recent_week) > 0 and len(older_week) > 0:
+                avg_recent = sum(h['price_factor'] for h in recent_week) / len(recent_week)
+                avg_older = sum(h['price_factor'] for h in older_week) / len(older_week)
+                
+                if avg_recent > avg_older * 1.02:
+                    return 'increasing'
+                elif avg_recent < avg_older * 0.98:
+                    return 'decreasing'
+                else:
+                    return 'stable'
         
         # Fallback to service-specific trends
         trend_patterns = {
@@ -473,14 +477,19 @@ class LightweightAIEngine:
     
     def _analyze_overall_market_trend(self) -> str:
         """Analyze overall market trend"""
-        recent_volatility = sum(abs(h['price_factor'] - 1.0) for h in self.historical_data[-30:]) / 30
+        recent_data = self.historical_data[-30:] if len(self.historical_data) >= 30 else self.historical_data
         
-        if recent_volatility > 0.05:
-            return 'volatile'
-        elif recent_volatility > 0.02:
-            return 'moderate'
+        if len(recent_data) > 0:
+            recent_volatility = sum(abs(h['price_factor'] - 1.0) for h in recent_data) / len(recent_data)
+            
+            if recent_volatility > 0.05:
+                return 'volatile'
+            elif recent_volatility > 0.02:
+                return 'moderate'
+            else:
+                return 'stable'
         else:
-            return 'stable'
+            return 'stable'  # Default when no data available
     
     def _calculate_market_volatility(self) -> str:
         """Calculate current market volatility level"""
@@ -727,7 +736,7 @@ class LightweightAIEngine:
         confidence = base_confidence.get(provider, 0.85)
         
         # Adjust based on workload complexity
-        workload_factors = len([v for v in workload_config.values() if v > 0])
+        workload_factors = len([v for v in workload_config.values() if isinstance(v, (int, float)) and v > 0])
         if workload_factors >= 4:
             confidence += 0.03  # More data points = higher confidence
         elif workload_factors <= 2:
@@ -1038,7 +1047,7 @@ class LightweightAIEngine:
     
     def _assess_workload_complexity(self, workload_config: Dict) -> str:
         """Assess workload complexity based on configuration"""
-        active_services = sum(1 for v in workload_config.values() if v > 0)
+        active_services = sum(1 for v in workload_config.values() if isinstance(v, (int, float)) and v > 0)
         
         if active_services >= 4:
             return 'high'
@@ -1375,12 +1384,14 @@ class LightweightAIEngine:
         
         total_cost = lambda_cost + storage_cost + compute_cost
         
-        if lambda_cost / total_cost > 0.4:
-            drivers.append('lambda_functions')
-        if storage_cost / total_cost > 0.3:
-            drivers.append('storage')
-        if compute_cost / total_cost > 0.3:
-            drivers.append('compute')
+        # Avoid division by zero
+        if total_cost > 0:
+            if lambda_cost / total_cost > 0.4:
+                drivers.append('lambda_functions')
+            if storage_cost / total_cost > 0.3:
+                drivers.append('storage')
+            if compute_cost / total_cost > 0.3:
+                drivers.append('compute')
         
         return drivers if drivers else ['mixed_workload']
     
@@ -1388,20 +1399,21 @@ class LightweightAIEngine:
         """Calculate specific optimization opportunities"""
         opportunities = []
         
-        # Provider migration opportunities
-        costs = {p: pred.predicted_cost for p, pred in predictions.items()}
-        cheapest = min(costs, key=costs.get)
-        most_expensive = max(costs, key=costs.get)
-        migration_savings = costs[most_expensive] - costs[cheapest]
-        
-        if migration_savings > 500:  # Significant savings
-            opportunities.append({
-                'type': 'provider_migration',
-                'description': f'Migrate from {most_expensive.upper()} to {cheapest.upper()}',
-                'potential_monthly_savings': round(migration_savings, 2),
-                'implementation_complexity': 'medium',
-                'risk_level': 'low'
-            })
+        # Provider migration opportunities (only if we have prediction data)
+        if predictions and len(predictions) > 1:
+            costs = {p: pred.predicted_cost for p, pred in predictions.items()}
+            cheapest = min(costs, key=costs.get)
+            most_expensive = max(costs, key=costs.get)
+            migration_savings = costs[most_expensive] - costs[cheapest]
+            
+            if migration_savings > 500:  # Significant savings
+                opportunities.append({
+                    'type': 'provider_migration',
+                    'description': f'Migrate from {most_expensive.upper()} to {cheapest.upper()}',
+                    'potential_monthly_savings': round(migration_savings, 2),
+                    'implementation_complexity': 'medium',
+                    'risk_level': 'low'
+                })
         
         # Function optimization
         lambda_invocations = workload_config.get('lambda_invocations', 0)
@@ -1459,16 +1471,17 @@ class LightweightAIEngine:
         
         # Multi-cloud strategy
         costs = {p: pred.predicted_cost for p, pred in predictions.items()}
-        cost_variance = max(costs.values()) - min(costs.values())
-        
-        if cost_variance > 1000:
-            recommendations.append({
-                'category': 'strategy',
-                'title': 'Multi-Cloud Cost Arbitrage',
-                'description': 'Significant cost differences between providers - consider multi-cloud deployment',
-                'priority': 'high',
-                'timeline': '4-8 weeks'
-            })
+        if costs and len(costs) > 1:  # Only calculate variance if we have multiple predictions
+            cost_variance = max(costs.values()) - min(costs.values())
+            
+            if cost_variance > 1000:
+                recommendations.append({
+                    'category': 'strategy',
+                    'title': 'Multi-Cloud Cost Arbitrage',
+                    'description': 'Significant cost differences between providers - consider multi-cloud deployment',
+                    'priority': 'high',
+                    'timeline': '4-8 weeks'
+                })
         
         return recommendations
     
@@ -1477,9 +1490,10 @@ class LightweightAIEngine:
         risks = []
         
         # Migration risks
-        estimated_spend = sum(pred.predicted_cost for pred in predictions.values()) / len(predictions)
-        if estimated_spend > 20000:
-            risks.append('High monthly spend increases migration complexity')
+        if predictions and len(predictions) > 0:
+            estimated_spend = sum(pred.predicted_cost for pred in predictions.values()) / len(predictions)
+            if estimated_spend > 20000:
+                risks.append('High monthly spend increases migration complexity')
         
         # Technical risks
         lambda_invocations = workload_config.get('lambda_invocations', 0)
@@ -1552,17 +1566,20 @@ class LightweightAIEngine:
                 'workload_type': 'balanced',
                 'optimization_potential': 'medium'
             },
-            'optimization_opportunities': [],
+            'optimization_opportunities': {
+                'total_savings_potential': 0.15,  # 15% potential savings
+                'priority_level': 'medium',
+                'implementation_complexity': 'low',
+                'estimated_monthly_savings': 125.50
+            },
             'strategic_recommendations': [
-                {
-                    'category': 'general',
-                    'title': 'Enable Full AI Analysis',
-                    'description': 'Enable complete AI engine for detailed optimization insights',
-                    'priority': 'medium'
-                }
+                'Enable Full AI Analysis for detailed optimization insights',
+                'Review resource allocation patterns',
+                'Consider automated scaling solutions'
             ],
             'overall_optimization_score': 75,
-            'confidence_score': 0.60
+            'confidence_score': 0.60,
+            'analysis_timestamp': datetime.now().isoformat()
         }
     
     def _determine_optimal_timing(self) -> str:

@@ -143,6 +143,43 @@ class ApiService {
     return response.data;
   }
 
+  // Enhanced operational features
+  async getOperationalDashboard() {
+    try {
+      const response = await axios.get(`${this.baseURL}/api/operational/dashboard-data`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async getIntelligentRecommendations(criteria) {
+    try {
+      const response = await axios.post(`${this.baseURL}/api/operational/recommendations`, criteria);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async getRealTimeCosts() {
+    try {
+      const response = await axios.get(`${this.baseURL}/api/operational/real-time-costs`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async getCurrentTimePricing(region = 'us-east-1') {
+    try {
+      const response = await axios.get(`${this.baseURL}/api/operational/current-time-pricing?region=${region}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Session management
   getSessionInfo() {
     return this.sessionInfo;

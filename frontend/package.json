@@ -15,8 +15,14 @@
     "react-scripts": "5.0.1",
     "recharts": "^3.2.0"
   },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "frontend": "react-scripts start",
+    "backend": "cd .. && python production_server.py",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
