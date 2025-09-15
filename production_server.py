@@ -54,6 +54,16 @@ def create_production_app():
             operational_features_available = False
             logging.warning("Operational AI engine not available, using basic features")
         
+        # Import new AI engines
+        try:
+            from predictive_analytics_engine import analytics_engine
+            from natural_language_processor import query_processor
+            advanced_ai_available = True
+            logging.info("✅ Advanced AI engines loaded successfully")
+        except ImportError:
+            advanced_ai_available = False
+            logging.warning("Advanced AI engines not available")
+        
         # Add operational endpoints if available
         if operational_features_available:
             @app.route('/api/operational/dashboard-data')
@@ -92,6 +102,80 @@ def create_production_app():
                     return {'status': 'success', 'pricing': pricing}
                 except Exception as e:
                     logging.error(f"Failed to get current time pricing: {e}")
+                    return {'status': 'error', 'message': str(e)}, 500
+        
+        # Add advanced AI endpoints
+        if advanced_ai_available:
+            @app.route('/api/ai/predict-costs', methods=['POST'])
+            def predict_costs():
+                try:
+                    request_data = request.get_json() or {}
+                    provider = request_data.get('provider', 'aws')
+                    service_type = request_data.get('service_type', 'ec2')
+                    horizon_hours = request_data.get('horizon_hours', 24)
+                    
+                    predictions = analytics_engine.predict_costs(provider, service_type, horizon_hours)
+                    return {'status': 'success', 'predictions': predictions}
+                except Exception as e:
+                    logging.error(f"Failed to generate predictions: {e}")
+                    return {'status': 'error', 'message': str(e)}, 500
+            
+            @app.route('/api/ai/detect-anomalies')
+            def detect_anomalies():
+                try:
+                    provider = request.args.get('provider')
+                    service_type = request.args.get('service_type')
+                    
+                    anomalies = analytics_engine.detect_anomalies(provider, service_type)
+                    return {'status': 'success', 'anomalies': anomalies}
+                except Exception as e:
+                    logging.error(f"Failed to detect anomalies: {e}")
+                    return {'status': 'error', 'message': str(e)}, 500
+            
+            @app.route('/api/ai/model-performance')
+            def get_model_performance():
+                try:
+                    performance = analytics_engine.get_model_performance()
+                    return {'status': 'success', 'performance': performance}
+                except Exception as e:
+                    logging.error(f"Failed to get model performance: {e}")
+                    return {'status': 'error', 'message': str(e)}, 500
+            
+            @app.route('/api/ai/natural-query', methods=['POST'])
+            def process_natural_query():
+                try:
+                    request_data = request.get_json() or {}
+                    query = request_data.get('query', '')
+                    context_data = request_data.get('context', {})
+                    
+                    if not query:
+                        return {'status': 'error', 'message': 'Query is required'}, 400
+                    
+                    result = query_processor.process_query(query, context_data)
+                    return {'status': 'success', 'result': result}
+                except Exception as e:
+                    logging.error(f"Failed to process natural query: {e}")
+                    return {'status': 'error', 'message': str(e)}, 500
+            
+            @app.route('/api/ai/train-models', methods=['POST'])
+            def train_models():
+                try:
+                    result = analytics_engine.auto_retrain_models()
+                    return {'status': 'success', 'training_results': result}
+                except Exception as e:
+                    logging.error(f"Failed to train models: {e}")
+                    return {'status': 'error', 'message': str(e)}, 500
+        
+        # Store cost data for analytics (if available)
+        if advanced_ai_available:
+            @app.route('/api/ai/store-cost-data', methods=['POST'])
+            def store_cost_data():
+                try:
+                    cost_data = request.get_json() or {}
+                    analytics_engine.store_cost_data(cost_data)
+                    return {'status': 'success', 'message': 'Cost data stored successfully'}
+                except Exception as e:
+                    logging.error(f"Failed to store cost data: {e}")
                     return {'status': 'error', 'message': str(e)}, 500
         
         # Ensure production configuration

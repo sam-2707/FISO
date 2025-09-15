@@ -1,51 +1,73 @@
-# FISO: FinOps-Intelligent Serverless Orchestrator
+# FISO: Enterprise Intelligence Platform
 
-FISO is a complete enterprise-grade multi-cloud orchestration platform with integrated security, interactive dashboards, and professional CLI tools. It provides intelligent routing across AWS Lambda, Azure Functions, and Google Cloud Functions with comprehensive DevOps capabilities.
+**FISO** is a cutting-edge **Enterprise Intelligence Platform** that combines **multi-cloud cost optimization** with **advanced AI/ML capabilities**. It provides intelligent cloud cost management, predictive analytics, anomaly detection, and automated optimization recommendations across AWS, Azure, and Google Cloud Platform.
 
 ## 🎉 **PRODUCTION STATUS: FULLY OPERATIONAL**
-- **✅ Multi-Cloud Orchestration**: 100% operational across all providers
+- **✅ AI-Powered Cost Optimization**: Machine learning models for predictive cost analysis
+- **✅ Real-Time Analytics Dashboard**: React-based enterprise interface with 5 AI modules
+- **✅ Anomaly Detection System**: Intelligent monitoring with severity classification
+- **✅ Natural Language Interface**: Conversational AI for cost queries and insights
+- **✅ AutoML Integration**: Automated model training and hyperparameter optimization
+- **✅ Multi-Cloud Orchestration**: 100% operational across all major cloud providers
 - **✅ Enterprise Security**: JWT & API key authentication with rate limiting
-- **✅ Interactive Dashboard**: Real-time monitoring and management interface
-- **✅ Professional CLI**: Command-line toolkit for DevOps workflows
-- **✅ Container Orchestration**: Docker and Kubernetes deployment ready
 
 ## 🚀 **Quick Start**
 
-### Option 1: Interactive Dashboard (Recommended)
+### Option 1: AI Enterprise Dashboard (Recommended)
 ```powershell
 # 1. Clone and setup
 git clone https://github.com/sam-2707/fiso.git && cd fiso
 
-# 2. Start the secure API server
-cd security && python secure_server.py
+# 2. Start the React development environment with AI backend
+cd frontend && npm install && npm start
 
-# 3. Open interactive dashboard
-# Navigate to: http://localhost:8080/secure_dashboard.html
+# 3. Access the AI-powered dashboard
+# Navigate to: http://localhost:3000
+# Backend API available at: http://localhost:5000
 ```
 
-### Option 2: Professional CLI
+### Option 2: Production AI Server Only
 ```powershell
-# 1. Setup CLI tools
-.\cli\setup_cli.ps1
+# 1. Setup Python environment
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements-production.txt
 
-# 2. Authenticate
-.\cli\fiso.cmd auth login
+# 2. Start the AI-powered production server
+python production_server.py
 
-# 3. Monitor system status
-.\cli\fiso.cmd status
-
-# 4. Real-time monitoring
-.\cli\fiso.cmd watch
+# 3. Access API endpoints at http://localhost:5000
 ```
 
 ### Option 3: Traditional Multi-Cloud Setup
 ```powershell
-# Traditional container-based setup
+# Legacy container-based setup
 .\scripts\setup_multicloud.ps1
 .\scripts\demo_multicloud.ps1
 ```
 
 ## 🏗️ **Core Features**
+
+### **🧠 AI-Powered Cost Intelligence**
+- **Predictive Analytics**: LSTM neural networks for cost forecasting with confidence intervals
+- **Anomaly Detection**: Real-time monitoring with severity classification and root cause analysis
+- **Natural Language Interface**: Conversational AI for intuitive cost queries and insights
+- **AutoML Integration**: Automated model training, hyperparameter optimization, and performance tracking
+- **Statistical Fallbacks**: Robust mathematical models when ML components are unavailable
+
+### **📊 Enterprise React Dashboard**
+- **Real-Time Monitoring**: Live cloud cost data with interactive charts and visualizations
+- **5-Module AI Interface**: Tabbed dashboard with Overview, Predictions, NL Interface, Anomaly Detection, AutoML
+- **Cost Optimization**: Intelligent recommendations with potential savings calculations
+- **Performance Analytics**: Historical trends and provider comparison analysis
+- **Responsive Design**: Modern Material-UI components with mobile-friendly interface
+
+### **⚡ Production AI Backend**
+- **Flask API Server**: Enterprise-grade Python backend with 10+ AI endpoints
+- **Multi-Cloud Integration**: Real-time pricing data from AWS, Azure, and GCP APIs
+- **Machine Learning Pipeline**: Integrated LSTM models with statistical model fallbacks
+- **Data Pipeline**: SQLite database with historical data storage for ML training
+- **Enhanced Azure API**: Real-time pricing scraper with intelligent caching
 
 ### **🔒 Enterprise Security System**
 - **JWT & API Key Authentication**: Dual authentication methods with token generation
@@ -54,20 +76,6 @@ cd security && python secure_server.py
 - **Permission System**: Role-based access control (RBAC)
 - **Security Monitoring**: Real-time threat detection and audit logs
 
-### **📊 Interactive Dashboard**
-- **Real-time Monitoring**: Live provider health and performance metrics
-- **Security Management**: API key generation and JWT token management
-- **Performance Charts**: Historical performance data with Chart.js
-- **API Testing**: Built-in testing interface for all endpoints
-- **Responsive Design**: Mobile-friendly with modern UI/UX
-
-### **⚡ Professional CLI Tools**
-- **Multi-Command Interface**: Comprehensive argparse-based CLI
-- **Authentication Management**: Secure login and configuration storage
-- **Real-time Monitoring**: Live system status with colored output
-- **Provider Operations**: Health checks and orchestration commands
-- **Configuration Management**: User-specific settings and persistence
-
 ### **☁️ Multi-Cloud Orchestration**
 - **AWS Lambda**: Production deployment with native SDK integration
 - **Azure Functions**: HTTP-based invocation with Linux runtime
@@ -75,16 +83,17 @@ cd security && python secure_server.py
 - **Intelligent Routing**: Policy-based provider selection with failover
 - **Performance Tracking**: Response time monitoring and optimization
 
-### **🐳 Container & Kubernetes Support**
-- **Docker Compose**: Complete containerized development environment
-- **Kubernetes Deployment**: Production-ready K8s manifests and scripts
-- **AWS EKS Integration**: Automated cluster setup and monitoring
-- **CI/CD Ready**: GitHub Actions and automated deployment pipelines
-
 ## 🎯 **Deployment Status**
 
-### **✅ Production Ready Components**
-- **Secure API Server**: `http://localhost:5000` - Enterprise authentication & routing
+### **✅ AI Enterprise Intelligence Platform**
+- **React Dashboard**: `http://localhost:3000` - AI-powered cost optimization interface
+- **Production API Server**: `http://localhost:5000` - AI endpoints with ML models loaded
+- **AI Predictive Analytics**: LSTM models with statistical fallbacks for cost forecasting
+- **Natural Language Interface**: Conversational AI for cost queries and insights
+- **Anomaly Detection System**: Real-time monitoring with severity classification
+- **AutoML Integration**: Model registry with training progress and hyperparameter optimization
+
+### **✅ Legacy Multi-Cloud Components**
 - **Interactive Dashboard**: `http://localhost:8080/secure_dashboard.html` - Real-time monitoring
 - **CLI Tools**: `.\cli\fiso.cmd` - Professional command-line interface
 - **AWS Lambda**: `https://krls9u88od.execute-api.us-east-1.amazonaws.com/prod` - Fully operational
@@ -93,52 +102,58 @@ cd security && python secure_server.py
 
 ### **🔧 Infrastructure Components**
 - **Multi-Cloud Abstraction Layer (MCAL)**: Terraform configurations for all providers
-- **Database Integration**: PostgreSQL with policy management
+- **AI Database Integration**: SQLite with historical data storage for ML training
 - **Container Orchestration**: Docker Compose for local development
 - **Kubernetes Support**: Production-ready manifests and automation
 - **Security Layer**: JWT authentication, rate limiting, and audit logging
 
 ## 🏛️ **Architecture Overview**
 
-FISO follows a modern microservices architecture with enterprise security:
+FISO follows a modern microservices architecture with enterprise AI intelligence:
 
-### **1. Secure API Gateway**
-- **Flask-based Server**: Enterprise-grade Python web server with CORS support
-- **Authentication Layer**: JWT and API key validation with session management
-- **Rate Limiting**: IP-based and user-based request throttling
-- **Request Routing**: Intelligent provider selection and failover logic
+### **1. AI-Powered Enterprise Dashboard**
+- **React Frontend**: Modern Material-UI interface with 5 AI modules and tabbed navigation
+- **Real-Time Analytics**: Live cost data visualization with interactive charts (Recharts)
+- **AI Component Suite**: Predictive analytics, natural language interface, anomaly detection, AutoML
+- **Performance Optimization**: Optimized with useCallback/useMemo hooks and error boundaries
 
-### **2. Interactive Dashboard**
-- **Web Interface**: Responsive HTML5 dashboard with real-time updates
-- **Performance Monitoring**: Chart.js integration for metrics visualization
-- **Security Management**: Built-in API key generation and testing tools
-- **Activity Logging**: Real-time audit logs and security monitoring
+### **2. Production AI Backend**
+- **Flask Server**: Enterprise-grade Python API with 10+ AI endpoints
+- **Machine Learning Pipeline**: LSTM models with statistical fallbacks and confidence intervals
+- **Real-Time Data Pipeline**: Multi-cloud pricing scraper with intelligent caching
+- **AI Database**: SQLite with historical data storage for model training and predictions
 
-### **3. Professional CLI**
-- **Command Interface**: Argparse-based CLI with colored output
-- **Configuration Management**: User-specific settings and authentication
-- **Real-time Monitoring**: Live system status and health checks
-- **Automation Ready**: Scriptable commands for CI/CD integration
+### **3. Cost Intelligence Engine**
+- **Predictive Analytics**: LSTM neural networks for accurate cost forecasting
+- **Anomaly Detection**: Real-time monitoring with severity classification algorithms
+- **Natural Language Processing**: Conversational AI for intuitive cost management
+- **AutoML Capabilities**: Automated model training with hyperparameter optimization
 
-### **4. Multi-Cloud Abstraction Layer (MCAL)**
-- **Terraform Infrastructure**: Consistent deployments across all providers
-- **Provider SDKs**: Native integration with AWS, Azure, and GCP APIs
-- **Policy Engine**: Database-driven routing and configuration management
-- **Container Support**: Docker and Kubernetes orchestration
+### **4. Multi-Cloud Integration Layer**
+- **Enhanced Azure API**: Real-time pricing scraper with intelligent caching mechanisms
+- **AWS Integration**: Native SDK integration with Lambda and cost management APIs
+- **GCP Integration**: Cloud Functions and pricing API with local emulator support
+- **Data Aggregation**: Unified cost data pipeline across all major cloud providers
 
 ## 💻 **Technology Stack**
 
-### **Backend & Security**
-- **Python 3.11+**: Secure API server with Flask and enterprise authentication
-- **Go (Golang)**: High-performance orchestrator API with cloud provider SDKs
-- **PostgreSQL**: Policy engine and configuration database
-- **JWT & API Keys**: Dual authentication with role-based permissions
+### **AI & Machine Learning**
+- **Python 3.11+**: AI engines with LSTM models, statistical algorithms, and data pipelines
+- **TensorFlow/PyTorch**: Neural networks for cost prediction (with statistical fallbacks)
+- **scikit-learn**: Anomaly detection algorithms and feature engineering
+- **SQLite**: Historical data storage for ML model training and predictions
 
-### **Frontend & Interfaces**
-- **HTML5/CSS3/JavaScript**: Interactive dashboard with real-time updates
-- **Chart.js**: Performance metrics and monitoring visualizations
-- **Python CLI**: Professional command-line tools with argparse
-- **PowerShell Scripts**: Windows automation and deployment tools
+### **Frontend & User Experience**
+- **React 18**: Modern component-based UI with hooks and performance optimization
+- **Material-UI (MUI)**: Enterprise-grade component library with responsive design
+- **Recharts**: Interactive data visualization for cost analytics and trends
+- **Axios**: HTTP client for seamless API integration with error handling
+
+### **Backend & API Services**
+- **Flask**: Production-grade Python web server with AI endpoint integration
+- **Python Data Pipeline**: Real-time cloud pricing scraper with intelligent caching
+- **Enhanced Azure API**: Custom pricing API client with error handling and retries
+- **CORS & Security**: Cross-origin support with authentication middleware
 
 ### **Infrastructure & DevOps**
 - **Docker & Docker Compose**: Containerized development environment
@@ -147,19 +162,39 @@ FISO follows a modern microservices architecture with enterprise security:
 - **GitHub Actions**: CI/CD pipelines and automated deployments
 
 ### **Cloud Providers & Services**
-- **Amazon Web Services (AWS)**: Lambda, API Gateway, CloudWatch
-- **Microsoft Azure**: Functions, App Service, Container Instances
-- **Google Cloud Platform (GCP)**: Cloud Functions, Cloud Run, Cloud Build
+- **Amazon Web Services (AWS)**: Lambda, API Gateway, CloudWatch, Cost Management API
+- **Microsoft Azure**: Functions, App Service, Container Instances, Pricing API
+- **Google Cloud Platform (GCP)**: Cloud Functions, Cloud Run, Cloud Build, Billing API
 
 ## 📁 **Project Structure**
 
 ```
 fiso/
-├── security/                    # 🔒 Enterprise Security System
+├── frontend/                    # 🧠 AI Enterprise React Dashboard
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── CloudDashboard.js        # Main AI dashboard with 5 modules
+│   │   │   └── AI/
+│   │   │       ├── PredictiveAnalytics.js    # LSTM cost forecasting
+│   │   │       ├── NaturalLanguageInterface.js # Conversational AI
+│   │   │       ├── AnomalyDetection.js       # Real-time anomaly monitoring
+│   │   │       └── AutoMLIntegration.js      # Automated ML pipeline
+│   │   └── services/
+│   │       └── apiService.js            # API integration layer
+│   └── package.json            # React dependencies and scripts
+├── predictor/                   # 🔮 AI Cost Intelligence Engine
+│   ├── production_ai_engine.py # Main AI engine with LSTM models
+│   ├── enhanced_azure_api.py   # Real-time Azure pricing scraper
+│   ├── real_time_pipeline.py   # Multi-cloud data pipeline
+│   └── lightweight_ai_engine.py # Statistical model fallbacks
+├── production_server.py         # 🚀 Flask API server with AI endpoints
+├── requirements-production.txt  # Python AI/ML dependencies
+├── predictive_analytics.db      # 📊 AI training data and model storage
+├── security/                    # 🔒 Legacy Enterprise Security System
 │   ├── fiso_security.py        # Core security manager with JWT/API keys
 │   ├── secure_api.py           # Multi-cloud API gateway
 │   └── secure_server.py        # Flask web server with authentication
-├── dashboard/                   # 📊 Interactive Web Dashboard
+├── dashboard/                   # 📊 Legacy Interactive Web Dashboard
 │   ├── secure_dashboard.html   # Main dashboard interface
 │   └── index.html              # Legacy dashboard
 ├── cli/                        # ⚡ Professional CLI Tools
@@ -184,8 +219,6 @@ fiso/
 │   ├── fiso-deployment.yaml   # Application deployment manifests
 │   ├── fiso-monitoring.yaml   # Monitoring and observability
 │   └── ...                     # Kubernetes configurations
-├── security/                   # 🛡️ Security & Authentication
-├── predictor/                  # 🧠 Cost Intelligence Engine
 ├── lambda/                     # 🔷 AWS Lambda Functions
 ├── terraform/                  # 🏗️ Infrastructure as Code
 └── docs/                       # 📖 Documentation & Guides
@@ -193,99 +226,104 @@ fiso/
 
 ## 🎮 **Usage Examples**
 
-### **Interactive Dashboard Usage**
+### **AI Enterprise Dashboard Usage**
 ```powershell
-# 1. Start the secure API server
-cd security
-python secure_server.py
+# 1. Start the AI-powered development environment
+cd frontend
+npm install
+npm start
 
-# 2. Open dashboard in browser
-# Visit: http://localhost:8080/secure_dashboard.html
+# 2. Access the AI dashboard in browser
+# Visit: http://localhost:3000
 
-# 3. Generate API key in dashboard or use demo key
-# Demo API Key: fiso_DbL7ElzVfdJdabE... (generated on startup)
+# 3. Explore AI features:
+# - Overview: Real-time cost analytics with provider comparison
+# - AI Predictions: LSTM cost forecasting with confidence intervals
+# - Natural Language: Ask questions like "What are my AWS costs this month?"
+# - Anomaly Detection: Real-time monitoring with severity alerts
+# - AutoML: Automated model training and hyperparameter optimization
 ```
 
-### **CLI Usage Examples**
+### **Production API Server Usage**
 ```powershell
-# Setup and authentication
-.\cli\fiso.cmd auth login                    # Authenticate with FISO API
-.\cli\fiso.cmd config show                   # View current configuration
+# 1. Start the AI backend server
+python production_server.py
 
-# Monitoring and status
-.\cli\fiso.cmd status                        # Get comprehensive system status
-.\cli\fiso.cmd health                        # Check all provider health
-.\cli\fiso.cmd health --provider aws         # Check specific provider
-.\cli\fiso.cmd metrics                       # View performance metrics
-
-# Operations and orchestration
-.\cli\fiso.cmd orchestrate                   # Auto-select best provider
-.\cli\fiso.cmd orchestrate --provider azure  # Use specific provider
-.\cli\fiso.cmd watch                         # Real-time monitoring
-
-# Help and documentation
-.\cli\fiso.cmd --help                        # Show all available commands
-.\cli\fiso.cmd health --help                 # Command-specific help
+# 2. AI endpoints available at http://localhost:5000:
+# /api/ai/predict-costs - LSTM cost predictions
+# /api/ai/natural-query - Natural language cost queries
+# /api/ai/detect-anomalies - Real-time anomaly detection
+# /api/ai/automl-status - AutoML training progress
+# /api/pricing-data - Real-time cloud pricing
+# /api/optimization-recommendations - AI cost optimization
 ```
 
 ### **API Integration Examples**
 ```bash
-# Health check with API key
-curl -H "X-API-Key: fiso_your_api_key" \
-     http://localhost:5000/health
-
-# Multi-cloud orchestration
+# AI cost prediction
 curl -X POST \
-     -H "X-API-Key: fiso_your_api_key" \
      -H "Content-Type: application/json" \
-     -d '{"provider": "aws", "region": "us-east-1"}' \
-     http://localhost:5000/orchestrate
+     -d '{"provider": "aws", "service": "ec2", "days": 30}' \
+     http://localhost:5000/api/ai/predict-costs
 
-# Get system metrics (admin required)
-curl -H "Authorization: Bearer your_jwt_token" \
-     http://localhost:5000/metrics
+# Natural language cost query
+curl -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"query": "What are my highest costs this month?"}' \
+     http://localhost:5000/api/ai/natural-query
+
+# Real-time anomaly detection
+curl -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"provider": "azure", "threshold": 0.8}' \
+     http://localhost:5000/api/ai/detect-anomalies
+
+# Get optimization recommendations
+curl http://localhost:5000/api/optimization-recommendations
 ```
 
 ## 🚀 **Getting Started**
 
 ### **Prerequisites**
-- **Python 3.11+** - For security server and CLI tools
-- **Docker Desktop** - For container orchestration (optional)
+- **Node.js 18+** - For React frontend development environment
+- **Python 3.11+** - For AI backend server and machine learning models
+- **npm/yarn** - For frontend package management
 - **PowerShell 5.1+** - For automation scripts  
-- **Cloud Provider Access** - AWS, Azure, or GCP credentials
+- **Cloud Provider Access** - AWS, Azure, or GCP credentials for real data
 
-### **Quick Setup (Recommended)**
+### **Quick Setup (AI Dashboard)**
 ```powershell
 # 1. Clone repository
 git clone https://github.com/sam-2707/fiso.git
 cd fiso
 
-# 2. Setup Python environment
+# 2. Setup Python AI environment
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install flask flask-cors PyJWT requests cryptography
+pip install -r requirements-production.txt
 
-# 3. Start secure API server
-cd security
-python secure_server.py
+# 3. Setup React frontend
+cd frontend
+npm install
 
-# 4. Open interactive dashboard
-# Visit: http://localhost:8080/secure_dashboard.html
+# 4. Start the full AI platform
+npm start  # Starts both React frontend and Python AI backend
+
+# 5. Access the AI dashboard
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000
 ```
 
-### **CLI Tools Setup**
+### **Production AI Server Only**
 ```powershell
-# Setup CLI tools
-.\cli\setup_cli.ps1
-
-# Start using CLI
-.\cli\fiso.cmd auth login
-.\cli\fiso.cmd status
+# For backend API development
+python production_server.py
+# Access AI endpoints at http://localhost:5000
 ```
 
-### **Traditional Multi-Cloud Setup**
+### **Legacy Multi-Cloud Setup**
 ```powershell
-# For full container-based setup
+# For traditional container-based setup
 .\scripts\setup_multicloud.ps1
 .\scripts\demo_multicloud.ps1
 ```

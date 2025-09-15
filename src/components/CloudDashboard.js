@@ -17,9 +17,7 @@ import {
   AttachMoney,
   Assessment,
   Psychology,
-  Analytics,
-  Warning,
-  AutoFixHigh
+  Analytics
 } from '@mui/icons-material';
 import {
   LineChart,
@@ -37,8 +35,6 @@ import {
 } from 'recharts';
 import NaturalLanguageInterface from './AI/NaturalLanguageInterface';
 import PredictiveAnalytics from './AI/PredictiveAnalytics';
-import AnomalyDetection from './AI/AnomalyDetection';
-import AutoMLIntegration from './AI/AutoMLIntegration';
 
 import { apiService } from '../services/apiService';
 
@@ -46,11 +42,22 @@ const CloudDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pricingData, setPricingData] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
   const [alerts, setAlerts] = useState([]);
-  const [activeTab, setActiveTab] = useState(0);
-  const [realTimeEnabled, setRealTimeEnabled] = useState(true);
-  const [timeSeriesKey, setTimeSeriesKey] = useState(0);
+
+  // Memoized function to generate alerts
+  const generateAlerts = useCallback((pricing, recommendations) => {
+    const newAlerts = [];
+    if (pricing) {
+      const totalCost = calculateTotalCost(pricing);
+      if (totalCost > 5000) {
+        newAlerts.push({
+          severity: 'warning',
+          message: `High monthly cost detected: $${totalCost.toFixed(2)}`
+        });
+      }
+    }
+    setAlerts(newAlerts);
+  }, []);
 
   // Real-time data refresh
   useEffect(() => {
@@ -62,7 +69,6 @@ const CloudDashboard = () => {
           apiService.getOptimizationRecommendations({})
         ]);
         setPricingData(pricingResponse);
-        setRecommendations(recommendationsResponse);
         generateAlerts(pricingResponse, recommendationsResponse);
         setError(null);
       } catch (err) {
@@ -73,12 +79,6 @@ const CloudDashboard = () => {
           pricing_data: generateDemoData(),
           total_data_points: 42
         });
-        setRecommendations({
-          recommendations: [
-            { type: 'Cost Optimization', description: 'Switch to GCP for 15% savings', potential_savings: '$234.56' },
-            { type: 'Performance', description: 'Upgrade to premium instances for better performance' }
-          ]
-        });
       } finally {
         setLoading(false);
       }
@@ -86,14 +86,10 @@ const CloudDashboard = () => {
 
     fetchData();
     
-    if (realTimeEnabled) {
-      const interval = setInterval(() => {
-        fetchData();
-        setTimeSeriesKey(prev => prev + 1); // Force time series regeneration
-      }, 30000); // 30-second refresh
-      return () => clearInterval(interval);
-    }
-  }, [realTimeEnabled]);
+    // Real-time refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [generateAlerts]);
 
   const generateDemoData = () => {
     return {
@@ -120,9 +116,9 @@ const CloudDashboard = () => {
         }
       }
     };
-  };
+  const [activeTab, setActiveTab] = useState(0);
 
-  const generateAlerts = useCallback((pricing, recs) => {
+  const generateAlerts2 = useCallback((pricing, recs) => {
     const newAlerts = [];
     
     // Cost spike alerts
@@ -148,14 +144,15 @@ const CloudDashboard = () => {
     setAlerts(newAlerts);
   }, []);
 
-  const calculateMetrics = () => {
+  // Memoized calculation functions for performance
+  const calculateMetrics = useMemo(() => {
     if (!pricingData?.pricing_data) {
       // Industry-standard realistic values for a typical mid-size company
       return {
         totalCost: 2847.33, // ~$2.8K monthly cloud spend is realistic
         potentialSavings: 427.94, // ~15% savings potential
         activeResources: 47,
-        activeAlerts: 0
+        activeAlerts: alerts.length
       };
     }
 
@@ -177,9 +174,9 @@ const CloudDashboard = () => {
       activeResources: serviceCount || 47,
       activeAlerts: alerts.length
     };
-  };
+  }, [pricingData, alerts]);
 
-  const formatChartData = () => {
+  const chartData = useMemo(() => {
     if (!pricingData?.pricing_data || Object.keys(pricingData.pricing_data).length === 0) {
       // Industry-standard realistic costs for different cloud services
       return [
@@ -228,9 +225,10 @@ const CloudDashboard = () => {
     return chartItems.length > 0 ? chartItems : [
       { name: 'No Data', cost: 0, confidence: 0, provider: 'N/A', trend: 'stable', service: 'N/A' }
     ];
-  };
+  }, [pricingData]);
 
-  const generateTimeSeriesData = () => {
+  // Memoized time series data generation
+  const timeSeriesData = useMemo(() => {
     const now = new Date();
     const data = [];
     
@@ -260,26 +258,7 @@ const CloudDashboard = () => {
     }
     
     return data;
-  };
-
-  const providerColors = {
-    AWS: '#FF9500',
-    AZURE: '#0078D4',
-    GCP: '#4285F4',
-    ORACLE: '#F80000'
-  };
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  const metrics = calculateMetrics();
-  const chartData = formatChartData();
-  const timeSeriesData = generateTimeSeriesData(); // Now regenerates with current time every 30 seconds
+  }, []);
 
   return (
     <Box sx={{ p: 3, pt: 1, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
@@ -298,8 +277,6 @@ const CloudDashboard = () => {
             <Tab icon={<Assessment />} label="Dashboard Overview" />
             <Tab icon={<Psychology />} label="AI Predictions" />
             <Tab icon={<Analytics />} label="Natural Language" />
-            <Tab icon={<Warning />} label="Anomaly Detection" />
-            <Tab icon={<AutoFixHigh />} label="AutoML" />
           </Tabs>
         </Box>
         
@@ -575,16 +552,6 @@ const CloudDashboard = () => {
           {/* Natural Language Tab */}
           {activeTab === 2 && (
             <NaturalLanguageInterface />
-          )}
-
-          {/* Anomaly Detection Tab */}
-          {activeTab === 3 && (
-            <AnomalyDetection pricingData={pricingData} />
-          )}
-
-          {/* AutoML Integration Tab */}
-          {activeTab === 4 && (
-            <AutoMLIntegration pricingData={pricingData} />
           )}
         </>
       )}

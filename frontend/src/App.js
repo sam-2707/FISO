@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import CloudDashboard from './components/CloudDashboard';
 import IndustryOperationsDashboard from './components/IndustryOperationsDashboard';
 import Navigation from './components/Navigation';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const theme = createTheme({
   palette: {
@@ -58,20 +59,22 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <div className="App">
-          <Navigation />
-          <Routes>
-            <Route path="/" element={<CloudDashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/operations" element={<IndustryOperationsDashboard />} />
-            <Route path="/operational" element={<CloudDashboard />} />
-          </Routes>
-        </div>
-      </Router>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <div className="App">
+            <Navigation />
+            <Routes>
+              <Route path="/" element={<CloudDashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/operations" element={<IndustryOperationsDashboard />} />
+              <Route path="/operational" element={<CloudDashboard />} />
+            </Routes>
+          </div>
+        </Router>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
