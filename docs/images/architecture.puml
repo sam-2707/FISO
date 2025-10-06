@@ -1,0 +1,72 @@
+@startuml
+!theme materia
+
+title FISO System Architecture
+
+skinparam rectangle {
+    BorderColor #333
+    BackgroundColor #EEE
+    roundCorner 15
+}
+
+skinparam component {
+    BorderColor #333
+    BackgroundColor #DDD
+    roundCorner 5
+}
+
+skinparam actor {
+    BorderColor #333
+}
+
+actor "Enterprise User" as user
+
+package "Frontend (React)" {
+    [React Dashboard] as dashboard
+    [WebSocket Client] as ws_client
+}
+
+package "Backend (Flask)" {
+    [Secure API Gateway] as gateway
+    [Production Server] as prod_server
+    [Real-Time Server] as rt_server
+}
+
+package "AI Engine Suite" {
+    [Cost Prediction (Prophet)] as prophet
+    [Anomaly Detection (Isolation Forest)] as anomaly
+    [Optimization Engine] as optimizer
+    [NLP Processor] as nlp
+}
+
+package "Data Layer" {
+    database "Production DB\n(fiso_production.db)" as db
+    database "Analytics DB\n(predictive_analytics.db)" as analytics_db
+    [Cache (Redis)] as cache
+}
+
+package "Cloud Providers" {
+    [AWS]
+    [Azure]
+    [GCP]
+}
+
+user --> dashboard : Interacts
+dashboard --> gateway : REST API Calls
+gateway --> prod_server : Forwards requests
+prod_server --> db
+prod_server --> optimizer
+prod_server --> prophet
+
+dashboard --> ws_client
+ws_client <--> rt_server : WebSocket
+
+rt_server --> cache
+rt_server --> nlp
+rt_server --> anomaly
+
+prod_server --> [AWS]
+prod_server --> [Azure]
+prod_server --> [GCP]
+
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+!theme materia
+
+title AI/ML Model Workflow
+
+skinparam usecase {
+    BorderColor #333
+    BackgroundColor #EEE
+}
+
+skinparam activity {
+    BorderColor #333
+    BackgroundColor #DDD
+}
+
+actor "Data Scientist" as ds
+
+package "Data & Training" {
+    database "Historical Cost Data" as historical_db
+    (AutoML Platform) as automl
+}
+
+package "AI Engines" {
+    (Cost Prediction Engine) as prediction_engine
+    (Anomaly Detection Engine) as anomaly_engine
+}
+
+package "Application" {
+    (API Endpoints) as api
+    (Real-Time Dashboard) as dashboard
+}
+
+ds --> automl : Initiates Training
+
+automl --> historical_db : Reads data
+automl -> prediction_engine : Deploys Prophet Model
+automl -> anomaly_engine : Deploys Isolation Forest Model
+
+prediction_engine --> api : Provides /api/ai/predict-costs
+anomaly_engine --> api : Provides /api/ai/detect-anomalies
+
+api --> dashboard : Serves data to frontend
+
+@enduml

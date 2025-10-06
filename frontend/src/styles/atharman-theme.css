@@ -1,0 +1,350 @@
+/* Atharman Theme - Clean Minimal UI Styles */
+
+/* Global Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Clean Card Styles */
+.clean-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease-in-out;
+}
+
+.clean-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-color: rgba(160, 174, 192, 0.4);
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: #2d3748;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  padding: 8px 20px;
+  transition: all 0.2s ease-in-out;
+  text-transform: none;
+}
+
+.btn-primary:hover {
+  background-color: #1a202c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 1.5px solid #3182ce;
+  border-radius: 8px;
+  color: #3182ce;
+  font-weight: 500;
+  padding: 8px 20px;
+  transition: all 0.2s ease-in-out;
+  text-transform: none;
+}
+
+.btn-secondary:hover {
+  background-color: #3182ce;
+  color: white;
+}
+
+/* Status Indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-online {
+  background-color: rgba(56, 161, 105, 0.1);
+  color: #38a169;
+  border: 1px solid rgba(56, 161, 105, 0.2);
+}
+
+.status-offline {
+  background-color: rgba(229, 62, 62, 0.1);
+  color: #e53e3e;
+  border: 1px solid rgba(229, 62, 62, 0.2);
+}
+
+.status-warning {
+  background-color: rgba(237, 137, 54, 0.1);
+  color: #ed8936;
+  border: 1px solid rgba(237, 137, 54, 0.2);
+}
+
+/* Loading States */
+.skeleton {
+  background: linear-gradient(90deg, #f7fafc 25%, #edf2f7 50%, #f7fafc 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* Typography Enhancements */
+.text-primary {
+  color: #2d3748;
+}
+
+.text-secondary {
+  color: #4a5568;
+}
+
+.text-muted {
+  color: #718096;
+}
+
+.text-success {
+  color: #38a169;
+}
+
+.text-warning {
+  color: #ed8936;
+}
+
+.text-error {
+  color: #e53e3e;
+}
+
+/* Layout Utilities */
+.container-clean {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section-spacing {
+  margin-bottom: 2rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Chart Styling */
+.chart-container {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.chart-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+/* Navigation Styles */
+.nav-clean {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+  color: #718096;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-item:hover {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+.nav-item.active {
+  background-color: #f7fafc;
+  color: #2d3748;
+  font-weight: 600;
+}
+
+/* Metric Cards */
+.metric-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.metric-card:hover {
+  border-color: rgba(160, 174, 192, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.metric-icon.primary {
+  background-color: #e6f3ff;
+  color: #3182ce;
+}
+
+.metric-icon.success {
+  background-color: #f0fff4;
+  color: #38a169;
+}
+
+.metric-icon.warning {
+  background-color: #fffbeb;
+  color: #ed8936;
+}
+
+.metric-icon.error {
+  background-color: #fed7d7;
+  color: #e53e3e;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container-clean {
+    padding: 0 16px;
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .metric-card {
+    padding: 1rem;
+  }
+  
+  .chart-container {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-spacing {
+    margin-bottom: 1.5rem;
+  }
+  
+  .metric-card {
+    padding: 0.75rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .clean-card {
+    border: 2px solid #2d3748;
+  }
+  
+  .btn-primary {
+    border: 2px solid #2d3748;
+  }
+  
+  .btn-secondary {
+    border: 2px solid #3182ce;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .clean-card {
+    background: #1a202c;
+    border-color: rgba(71, 85, 105, 0.3);
+    color: #f7fafc;
+  }
+  
+  .nav-clean {
+    background: #1a202c;
+    border-bottom-color: rgba(71, 85, 105, 0.3);
+  }
+  
+  .chart-container {
+    background: #1a202c;
+    border-color: rgba(71, 85, 105, 0.3);
+    color: #f7fafc;
+  }
+  
+  .text-primary {
+    color: #f7fafc;
+  }
+  
+  .text-secondary {
+    color: #e2e8f0;
+  }
+  
+  .text-muted {
+    color: #a0aec0;
+  }
+}
+
+/* Print styles */
+@media print {
+  .nav-clean {
+    display: none;
+  }
+  
+  .clean-card {
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    display: none;
+  }
+}

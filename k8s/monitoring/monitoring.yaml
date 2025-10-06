@@ -1,0 +1,318 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: fiso-enterprise-monitor
+  namespace: fiso-production
+  labels:
+    app: fiso-enterprise
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: fiso-enterprise
+  endpoints:
+  - port: production
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  - port: realtime
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-fiso
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  fiso-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "FISO Enterprise Intelligence Platform",
+        "tags": ["fiso", "enterprise", "ai", "cloud-costs"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Application Health",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=\"fiso-enterprise-service\"}",
+                "legendFormat": "Service Status"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [
+                  {"value": 1, "text": "UP", "color": "green"},
+                  {"value": 0, "text": "DOWN", "color": "red"}
+                ]
+              }
+            },
+            "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(flask_http_request_total[5m])",
+                "legendFormat": "{{method}} {{endpoint}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "flask_http_request_duration_seconds",
+                "legendFormat": "{{quantile}} percentile"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(flask_http_request_total{status=~\"4..|5..\"}[5m])",
+                "legendFormat": "{{status}} errors"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "AI Model Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "fiso_ai_prediction_accuracy",
+                "legendFormat": "Prediction Accuracy"
+              },
+              {
+                "expr": "fiso_ai_model_inference_time",
+                "legendFormat": "Inference Time (ms)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "WebSocket Connections",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "fiso_websocket_active_connections",
+                "legendFormat": "Active Connections"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 0, "y": 24}
+          },
+          {
+            "id": 7,
+            "title": "Cost Analysis Requests",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(fiso_cost_analysis_requests_total[5m])",
+                "legendFormat": "{{provider}} requests"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 18, "x": 6, "y": 24}
+          },
+          {
+            "id": 8,
+            "title": "Resource Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"fiso-enterprise-.*\"}[5m])",
+                "legendFormat": "CPU Usage"
+              },
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"fiso-enterprise-.*\"} / 1024 / 1024",
+                "legendFormat": "Memory Usage (MB)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+          }
+        ],
+        "time": {"from": "now-1h", "to": "now"},
+        "refresh": "30s"
+      }
+    }
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fiso-enterprise-alerts
+  namespace: fiso-production
+  labels:
+    app: fiso-enterprise
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: fiso-enterprise.rules
+    rules:
+    - alert: FISOServiceDown
+      expr: up{job="fiso-enterprise-service"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "FISO Enterprise service is down"
+        description: "FISO Enterprise service has been down for more than 1 minute."
+
+    - alert: FISOHighErrorRate
+      expr: rate(flask_http_request_total{status=~"5.."}[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate in FISO Enterprise"
+        description: "Error rate is {{ $value }} errors per second."
+
+    - alert: FISOHighResponseTime
+      expr: flask_http_request_duration_seconds{quantile="0.95"} > 2
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High response time in FISO Enterprise"
+        description: "95th percentile response time is {{ $value }} seconds."
+
+    - alert: FISOAIModelAccuracyDrop
+      expr: fiso_ai_prediction_accuracy < 0.8
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "AI model accuracy drop detected"
+        description: "AI model accuracy has dropped to {{ $value }}."
+
+    - alert: FISOHighMemoryUsage
+      expr: container_memory_usage_bytes{pod=~"fiso-enterprise-.*"} / container_spec_memory_limit_bytes > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage in FISO Enterprise pod"
+        description: "Memory usage is above 90% in pod {{ $labels.pod }}."
+
+    - alert: FISOHighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total{pod=~"fiso-enterprise-.*"}[5m]) / container_spec_cpu_quota * container_spec_cpu_period > 0.8
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage in FISO Enterprise pod"
+        description: "CPU usage is above 80% in pod {{ $labels.pod }}."
+
+    - alert: FISOWebSocketConnectionDrop
+      expr: fiso_websocket_active_connections < 1
+      for: 5m
+      labels:
+        severity: info
+      annotations:
+        summary: "No active WebSocket connections"
+        description: "There are no active WebSocket connections for real-time updates."
+
+    - alert: FISODatabaseConnectionIssue
+      expr: fiso_database_connection_errors_total > 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Database connection issues detected"
+        description: "Database connection errors detected: {{ $value }}."
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fiso-logging-config
+  namespace: fiso-production
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+
+    [INPUT]
+        Name              tail
+        Path              /app/logs/*.log
+        Parser            json
+        Tag               fiso.app.*
+        Refresh_Interval  5
+        Mem_Buf_Limit     50MB
+
+    [INPUT]
+        Name              tail
+        Path              /app/reports/*.log
+        Parser            json
+        Tag               fiso.reports.*
+        Refresh_Interval  5
+
+    [FILTER]
+        Name                kubernetes
+        Match               fiso.*
+        Merge_Log           On
+        Merge_Log_Key       log_processed
+        Keep_Log            Off
+        K8S-Logging.Parser  On
+        Annotations         Off
+        Labels              On
+
+    [FILTER]
+        Name                modify
+        Match               fiso.*
+        Add                 service fiso-enterprise
+        Add                 environment production
+
+    [OUTPUT]
+        Name                elasticsearch
+        Match               fiso.*
+        Host                elasticsearch.logging.svc.cluster.local
+        Port                9200
+        Index               fiso-logs
+        Type                _doc
+        HTTP_User           elastic
+        HTTP_Passwd         ${ELASTICSEARCH_PASSWORD}
+        Generate_ID         On
+        Logstash_Format     On
+        Logstash_Prefix     fiso
+        Time_Key            @timestamp
+        Replace_Dots        On
+        Retry_Limit         5
+
+    [OUTPUT]
+        Name                cloudwatch_logs
+        Match               fiso.*
+        region              us-east-1
+        log_group_name      /aws/kubernetes/fiso-enterprise
+        log_stream_prefix   production-
+        auto_create_group   On
+
+  parsers.conf: |
+    [PARSER]
+        Name        json
+        Format      json
+        Time_Key    timestamp
+        Time_Format %Y-%m-%d %H:%M:%S
+        Time_Keep   On

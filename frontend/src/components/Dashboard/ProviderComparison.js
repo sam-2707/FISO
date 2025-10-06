@@ -23,20 +23,25 @@ const ProviderComparison = ({ data }) => {
         setLoading(true);
         setError(null);
         
-        const response = await axios.post('/api/ai/comprehensive-analysis', {
+        const response = await axios.post('http://localhost:5000/api/ai/comprehensive-analysis', {
           providers: ['aws', 'azure', 'gcp', 'oracle'],
           services: ['compute', 'storage', 'database', 'networking'],
           region: 'us-east-1'
         }, {
           timeout: 15000,
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer your-token-here'
+            'Content-Type': 'application/json'
           }
         });
         
-        if (response.data && response.data.success) {
-          setComparisonData(response.data);
+        if (response.data && (response.data.cost_analysis || response.data.provider_analysis)) {
+          // Wrap the response in the expected format for the component
+          setComparisonData({
+            success: true,
+            comparison: response.data,
+            timestamp: response.data.timestamp
+          });
+          console.log('✅ Fetched comprehensive analysis data');
         } else {
           throw new Error('Invalid response format');
         }

@@ -1,0 +1,101 @@
+# FISO Docker ignore file
+# Ignore development files and directories that shouldn't be in production container
+
+# Node modules (will be installed during build)
+node_modules/
+frontend/node_modules/
+**/node_modules/
+
+# Build artifacts
+frontend/build/
+build/
+dist/
+
+# Development files
+.env
+.env.local
+.env.development
+.env.development.local
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+pip-log.txt
+pip-delete-this-directory.txt
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+*.swp
+*.swo
+*~
+
+# Documentation
+docs/
+*.md
+README*
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Development scripts
+start-fiso.*
+package-lock.json
+
+# Temporary files
+tmp/
+temp/
+
+# Reports and data that shouldn't be in container
+reports/
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Kubernetes and deployment files
+k8s/
+deployment/
+.terraform/
+terraform.tfstate*

@@ -1,0 +1,265 @@
+# Staging Environment Configuration
+# For FISO Enterprise Intelligence Platform staging deployment
+
+# Environment Settings
+environment: staging
+debug: false
+log_level: INFO
+
+# Application Configuration
+app:
+  name: "FISO Enterprise Intelligence Platform - Staging"
+  version: "1.0.0"
+  host: "0.0.0.0"
+  port: 5000
+  secret_key: "${SECRET_KEY}"
+
+# Real-time Server Configuration
+realtime:
+  enabled: true
+  host: "0.0.0.0"
+  port: 5001
+  websocket_path: "/ws"
+  heartbeat_interval: 30
+
+# Database Configuration
+database:
+  type: sqlite
+  path: "/data/fiso_staging.db"
+  backup_enabled: true
+  backup_schedule: "0 2 * * *"  # Daily at 2 AM
+  
+# Kubernetes Configuration
+kubernetes:
+  namespace: "fiso-staging"
+  context: "staging-cluster"
+  manifests_path: "k8s/staging"
+  replicas: 2
+  
+  # Resource Limits
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+      
+  # Auto-scaling
+  autoscaling:
+    enabled: true
+    min_replicas: 2
+    max_replicas: 5
+    target_cpu_utilization: 70
+
+# AI/ML Configuration
+ai:
+  model_path: "/app/models/"
+  fallback_enabled: true
+  confidence_threshold: 0.75
+  max_prediction_days: 90
+  
+  # OpenAI Configuration
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-3.5-turbo"
+    enabled: true
+    rate_limit: 100  # requests per hour
+  
+  # AutoML Configuration
+  automl:
+    enabled: true
+    budget: 120  # seconds
+
+# Cloud Provider APIs
+cloud_providers:
+  aws:
+    enabled: true
+    mock_data: false
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+    region: "us-east-1"
+    
+  azure:
+    enabled: true
+    mock_data: false
+    subscription_id: "${AZURE_SUBSCRIPTION_ID}"
+    client_id: "${AZURE_CLIENT_ID}"
+    client_secret: "${AZURE_CLIENT_SECRET}"
+    tenant_id: "${AZURE_TENANT_ID}"
+    
+  gcp:
+    enabled: true
+    mock_data: false
+    project_id: "${GCP_PROJECT_ID}"
+    service_account_key_path: "/secrets/gcp-service-account.json"
+
+# Security Configuration
+security:
+  cors_enabled: true
+  cors_origins: 
+    - "https://staging.fiso.enterprise.com"
+    - "https://staging-app.fiso.enterprise.com"
+  
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 500
+    burst_size: 50
+  
+  # Authentication
+  authentication:
+    enabled: true
+    type: "jwt"
+    jwt_secret: "${JWT_SECRET}"
+    token_expiry: 3600  # 1 hour
+    
+  # HTTPS Configuration
+  tls:
+    enabled: true
+    cert_path: "/certs/tls.crt"
+    key_path: "/certs/tls.key"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  namespace: "monitoring"
+  
+  # Prometheus Configuration
+  prometheus:
+    enabled: true
+    url: "https://prometheus-staging.fiso.enterprise.com"
+    retention: "15d"
+    scrape_interval: "15s"
+    
+  # Grafana Configuration
+  grafana:
+    enabled: true
+    url: "https://grafana-staging.fiso.enterprise.com"
+    admin_password: "${GRAFANA_ADMIN_PASSWORD}"
+    
+  # Alerting
+  alerting:
+    enabled: true
+    webhook_url: "${ALERT_WEBHOOK_URL}"
+    channels:
+      - name: "staging-alerts"
+        type: "slack"
+        webhook: "${SLACK_WEBHOOK_URL}"
+        
+  # Health Checks
+  health_checks:
+    enabled: true
+    interval: 60
+    timeout: 30
+    endpoints:
+      - "https://staging-api.fiso.enterprise.com/health"
+      - "https://staging-api.fiso.enterprise.com:5001/health"
+      
+  # Logging Configuration
+  logging:
+    level: INFO
+    format: "json"
+    centralized: true
+    elasticsearch:
+      enabled: true
+      url: "${ELASTICSEARCH_URL}"
+      index: "fiso-staging-logs"
+    retention: "30 days"
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  class: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  
+  hosts:
+    - host: "staging-api.fiso.enterprise.com"
+      paths:
+        - path: "/"
+          service: "fiso-enterprise"
+          port: 5000
+    - host: "staging-ws.fiso.enterprise.com"
+      paths:
+        - path: "/"
+          service: "fiso-enterprise"
+          port: 5001
+          
+  tls:
+    - secretName: "fiso-staging-tls"
+      hosts:
+        - "staging-api.fiso.enterprise.com"
+        - "staging-ws.fiso.enterprise.com"
+
+# Storage Configuration
+storage:
+  type: "persistent"
+  class: "standard"
+  size: "10Gi"
+  access_modes: ["ReadWriteOnce"]
+  
+  # Backup Configuration
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    retention: "7 days"
+    storage_class: "backup-storage"
+
+# Performance Configuration
+performance:
+  cache_enabled: true
+  cache_ttl: 600  # 10 minutes
+  redis:
+    enabled: true
+    url: "${REDIS_URL}"
+    password: "${REDIS_PASSWORD}"
+  
+  connection_pool_size: 20
+  request_timeout: 30
+  
+  # CDN Configuration
+  cdn:
+    enabled: true
+    provider: "cloudflare"
+    zone_id: "${CLOUDFLARE_ZONE_ID}"
+    api_token: "${CLOUDFLARE_API_TOKEN}"
+
+# Features Configuration
+features:
+  executive_reporting: true
+  real_time_streaming: true
+  ai_predictions: true
+  natural_language: true
+  anomaly_detection: true
+  cost_optimization: true
+  multi_cloud: true
+  advanced_analytics: true
+  
+# Testing Configuration
+testing:
+  integration_tests: true
+  performance_tests: true
+  smoke_tests: true
+  test_data_enabled: false
+  
+# CI/CD Configuration
+cicd:
+  enabled: true
+  branch: "staging"
+  auto_deploy: true
+  rollback_enabled: true
+  
+  # Deployment Strategy
+  deployment:
+    strategy: "rolling"
+    max_unavailable: 1
+    max_surge: 1
+    
+  # Quality Gates
+  quality_gates:
+    unit_tests: true
+    security_scan: true
+    performance_threshold: 2000  # ms
+    success_rate_threshold: 95  # %

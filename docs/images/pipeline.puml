@@ -1,0 +1,51 @@
+@startuml
+!theme materia
+
+title Real-Time Data Pipeline
+
+skinparam rectangle {
+    BorderColor #333
+    BackgroundColor #EEE
+    roundCorner 15
+}
+
+skinparam component {
+    BorderColor #333
+    BackgroundColor #DDD
+    roundCorner 5
+}
+
+cloud "Cloud Provider APIs\n(AWS, Azure, GCP)" as cloud_apis
+
+package "Data Ingestion" {
+    [Real-Time Data Scraper] as scraper
+}
+
+package "Processing & Analytics" {
+    [Real-Time Pipeline] as pipeline
+    [Data Quality Scoring] as quality_score
+    [AI Engine (Lightweight)] as ai_engine
+    database "Cache (Redis)" as cache
+}
+
+package "Real-Time Server (Flask)" {
+    [WebSocket Server] as ws_server
+}
+
+package "Frontend" {
+    [React Dashboard] as dashboard
+}
+
+scraper -> pipeline : Raw cost data
+cloud_apis -> scraper : Fetches data (2-min interval)
+
+pipeline -> quality_score : Validate data
+quality_score -> pipeline : Score (e.g., 96.8%)
+
+pipeline -> ai_engine : Processed data
+ai_engine -> cache : Store insights (6-min TTL)
+
+cache -> ws_server : Get latest data
+ws_server -> dashboard : Push updates via WebSocket
+
+@enduml

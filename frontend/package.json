@@ -1,7 +1,7 @@
 {
-  "name": "fiso-enterprise-frontend",
+  "name": "atharman-enterprise-frontend",
   "version": "1.0.0",
-  "description": "FISO Enterprise Intelligence Platform - Modern React Frontend",
+  "description": "Atharman AI-Powered Cloud Intelligence Platform - Modern React Frontend",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -13,7 +13,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.1",
     "react-scripts": "5.0.1",
-    "recharts": "^3.2.0"
+    "recharts": "^3.2.0",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

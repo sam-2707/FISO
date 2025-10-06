@@ -1,0 +1,321 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiso-enterprise-app
+  namespace: fiso-production
+  labels:
+    app: fiso-enterprise
+    version: v1.0.0
+    component: application
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: fiso-enterprise
+  template:
+    metadata:
+      labels:
+        app: fiso-enterprise
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: fiso-service-account
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: fiso-app
+        image: ghcr.io/sam-2707/fiso-enterprise:${IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+          name: production
+          protocol: TCP
+        - containerPort: 5001
+          name: realtime
+          protocol: TCP
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: redis-url
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: jwt-secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: aws-secret-access-key
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: azure-client-id
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: azure-client-secret
+        - name: GCP_SERVICE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fiso-secrets
+              key: gcp-service-account-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+        - name: app-logs
+          mountPath: /app/logs
+        - name: reports-storage
+          mountPath: /app/reports
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: fiso-data-pvc
+      - name: app-logs
+        persistentVolumeClaim:
+          claimName: fiso-logs-pvc
+      - name: reports-storage
+        persistentVolumeClaim:
+          claimName: fiso-reports-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiso-enterprise-service
+  namespace: fiso-production
+  labels:
+    app: fiso-enterprise
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: ${SSL_CERT_ARN}
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+    targetPort: 5000
+    protocol: TCP
+    name: https-production
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+    name: realtime
+  selector:
+    app: fiso-enterprise
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiso-enterprise-internal
+  namespace: fiso-production
+  labels:
+    app: fiso-enterprise
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: production
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+    name: realtime
+  selector:
+    app: fiso-enterprise
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fiso-enterprise-ingress
+  namespace: fiso-production
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - fiso.enterprise.com
+    - api.fiso.enterprise.com
+    secretName: fiso-tls-secret
+  rules:
+  - host: fiso.enterprise.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fiso-enterprise-internal
+            port:
+              number: 5000
+  - host: api.fiso.enterprise.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fiso-enterprise-internal
+            port:
+              number: 5000
+      - path: /realtime
+        pathType: Prefix
+        backend:
+          service:
+            name: fiso-enterprise-internal
+            port:
+              number: 5001
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fiso-data-pvc
+  namespace: fiso-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fiso-logs-pvc
+  namespace: fiso-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fiso-reports-pvc
+  namespace: fiso-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fiso-enterprise-pdb
+  namespace: fiso-production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: fiso-enterprise
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fiso-enterprise-hpa
+  namespace: fiso-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fiso-enterprise-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60

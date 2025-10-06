@@ -33,32 +33,80 @@ const Navigation = () => {
   };
 
   return (
-    <AppBar position="static" elevation={1} sx={{ backgroundColor: '#1976d2', mb: 3 }}>
+    <AppBar 
+      position="static" 
+      elevation={0} 
+      sx={{ 
+        backgroundColor: '#ffffff',
+        color: '#2d3748',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+        mb: 0
+      }}
+    >
       <Container maxWidth="xl">
-        <Toolbar sx={{ px: 0 }}>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, fontWeight: 'bold' }}
-          >
-            FISO - Cloud Cost Optimization
-          </Typography>
+        <Toolbar sx={{ px: 0, py: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <img 
+              src="/atharman_logo.svg" 
+              alt="Atharman" 
+              style={{ 
+                height: 40, 
+                marginRight: 16
+              }}
+            />
+            <Box>
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{ 
+                  fontWeight: 700,
+                  color: '#2d3748',
+                  mb: -0.5
+                }}
+              >
+                Atharman
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ 
+                  color: '#718096',
+                  fontWeight: 500,
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  fontSize: '0.7rem'
+                }}
+              >
+                AI Financial Intelligence
+              </Typography>
+            </Box>
+          </Box>
           
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Box>
             <Tabs
               value={getCurrentTab()}
               onChange={handleTabChange}
-              textColor="inherit"
-              indicatorColor="secondary"
               sx={{
                 '& .MuiTab-root': {
-                  color: 'rgba(255, 255, 255, 0.7)',
+                  color: '#718096',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  minHeight: 48,
+                  padding: '8px 16px',
+                  borderRadius: 1,
+                  margin: '0 4px',
+                  transition: 'all 0.2s ease-in-out',
                   '&.Mui-selected': {
-                    color: 'white',
+                    color: '#2d3748',
+                    backgroundColor: '#f7fafc',
+                    fontWeight: 600,
+                  },
+                  '&:hover': {
+                    backgroundColor: '#f7fafc',
                   },
                 },
                 '& .MuiTabs-indicator': {
-                  backgroundColor: 'white',
+                  display: 'none',
                 },
               }}
             >
@@ -66,13 +114,11 @@ const Navigation = () => {
                 icon={<DashboardIcon />}
                 label="Dashboard"
                 iconPosition="start"
-                sx={{ minHeight: 64 }}
               />
               <Tab
                 icon={<SettingsIcon />}
                 label="Operations"
                 iconPosition="start"
-                sx={{ minHeight: 64 }}
               />
             </Tabs>
           </Box>

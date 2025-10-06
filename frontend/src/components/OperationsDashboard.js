@@ -75,7 +75,7 @@ const OperationsDashboard = () => {
         setLoading(true);
         const [pricingResponse, recommendationsResponse] = await Promise.all([
           apiService.getRealTimePricing(),
-          apiService.getOptimizationRecommendations({})
+          apiService.getRecommendations()
         ]);
         setPricingData(pricingResponse);
         setRecommendations(recommendationsResponse);

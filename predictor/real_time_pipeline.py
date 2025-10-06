@@ -29,9 +29,9 @@ class RealTimeDataPipeline:
         self.azure_api = EnhancedAzurePricingAPI()
         
         # Pipeline configuration
-        self.update_interval_minutes = 5  # Update every 5 minutes
+        self.update_interval_minutes = 2  # Update every 2 minutes for more real-time data
         self.max_workers = 3  # For concurrent data collection
-        self.cache_duration_hours = 1  # Cache data for 1 hour
+        self.cache_duration_hours = 0.1  # Cache data for 6 minutes (0.1 hours) for fresher data
         
         # Pipeline state
         self.is_running = False

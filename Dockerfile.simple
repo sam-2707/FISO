@@ -1,0 +1,55 @@
+# FISO Simple Production Dockerfile - Minimal version for debugging
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN groupadd -r fiso && useradd -r -g fiso fiso
+
+# Set working directory
+WORKDIR /app
+
+# Upgrade pip first
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install minimal Python dependencies
+COPY requirements-minimal.txt ./
+RUN pip install --no-cache-dir -r requirements-minimal.txt
+
+# Copy application code
+COPY . .
+
+# Create startup script with basic functionality
+RUN echo '#!/bin/bash\n\
+echo "Starting FISO Simple Server..."\n\
+if [ -f "production_server.py" ]; then\n\
+    python production_server.py\n\
+else\n\
+    echo "No production_server.py found, starting simple HTTP server"\n\
+    python -m http.server 5000\n\
+fi' > /app/start-simple.sh && chmod +x /app/start-simple.sh
+
+# Create necessary directories and set permissions
+RUN mkdir -p logs reports data && \
+    chown -R fiso:fiso /app
+
+# Switch to non-root user
+USER fiso
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/ || exit 1
+
+# Expose port
+EXPOSE 5000
+
+# Start the application
+CMD ["/bin/bash", "/app/start-simple.sh"]

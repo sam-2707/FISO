@@ -507,19 +507,19 @@ const AnomalyDetection = ({ pricingData }) => {
                                 color={severityInfo.color}
                                 size="small"
                               />
-                              <Typography variant="body2">
+                              <span style={{ fontSize: '0.875rem' }}>
                                 {anomaly.provider} {anomaly.service_type.toUpperCase()}
-                              </Typography>
+                              </span>
                             </Box>
                           }
                           secondary={
                             <Box>
-                              <Typography variant="body2" color="textSecondary">
+                              <div style={{ fontSize: '0.875rem', color: 'rgba(0, 0, 0, 0.6)' }}>
                                 ${anomaly.actual_cost.toFixed(4)} (expected ${anomaly.expected_cost?.toFixed(4)})
-                              </Typography>
-                              <Typography variant="caption" color="textSecondary">
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'rgba(0, 0, 0, 0.6)' }}>
                                 {new Date(anomaly.timestamp).toLocaleString()}
-                              </Typography>
+                              </div>
                             </Box>
                           }
                         />

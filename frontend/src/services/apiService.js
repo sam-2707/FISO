@@ -1,38 +1,87 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for ML operations
   headers: {
     'Content-Type': 'application/json',
+    'X-API-Version': '2.0'
   },
 });
 
-// Request interceptor for debugging
+// Enhanced request interceptor with authentication and performance monitoring
 api.interceptors.request.use(
   (config) => {
-    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`);
+    // Add API key if available
+    const apiKey = localStorage.getItem('fiso_api_key') || 'demo_api_key';
+    if (apiKey) {
+      config.headers['X-API-Key'] = apiKey;
+    }
+    
+    // Add request timestamp for performance monitoring
+    config.metadata = { startTime: new Date() };
+    
+    console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
+    console.error('❌ Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor for error handling
+// Enhanced response interceptor with better error handling
 api.interceptors.response.use(
   (response) => {
+    // Log response time and success
+    if (response.config.metadata) {
+      const duration = new Date() - response.config.metadata.startTime;
+      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}: ${duration}ms`);
+    }
     return response;
   },
   (error) => {
-    console.error('Response error:', error);
-    if (error.response) {
-      console.error('Error status:', error.response.status);
-      console.error('Error data:', error.response.data);
+    const duration = error.config?.metadata ? new Date() - error.config.metadata.startTime : 0;
+    console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url}: ${duration}ms`);
+    
+    // Enhanced error handling with user-friendly messages
+    let userMessage = '';
+    
+    if (error.response?.status === 401) {
+      console.warn('🔐 Authentication failed, clearing credentials');
+      localStorage.removeItem('fiso_api_key');
+      userMessage = 'Authentication expired. Please refresh the page.';
+    } else if (error.response?.status === 403) {
+      userMessage = 'Access denied. Please check your permissions.';
+    } else if (error.response?.status === 404) {
+      userMessage = 'Requested data not found. Using cached information.';
+    } else if (error.response?.status === 429) {
+      userMessage = 'Too many requests. Please wait a moment before trying again.';
+    } else if (error.response?.status === 503) {
+      console.warn('🔧 Service temporarily unavailable, using fallback data');
+      userMessage = 'Service temporarily unavailable. Using cached data.';
+    } else if (error.code === 'ECONNABORTED') {
+      console.warn('⏱️ Request timeout, consider using cached data');
+      userMessage = 'Request timed out. Check your connection and try again.';
+    } else if (error.response?.status >= 500) {
+      console.warn('🔥 Server error, falling back to demo data');
+      userMessage = 'Server error encountered. Using fallback data.';
+    } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+      userMessage = 'Network connection issue. Please check your internet connection.';
     }
+    
+    // Store user-friendly error message for components to use
+    if (userMessage) {
+      error.userMessage = userMessage;
+    }
+    
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -41,42 +90,82 @@ export const apiService = {
   // Core pricing data endpoints
   async getPricingData() {
     try {
-      const response = await api.get('/api/pricing-data');
+      // Use production pricing endpoint with real cloud provider data
+      const timestamp = Date.now();
+      const response = await api.get(`/api/production/pricing?refresh=true&t=${timestamp}`);
+      console.log('✅ Fetched production pricing data:', response.data.timestamp);
       return response.data;
     } catch (error) {
-      console.warn('Failed to fetch pricing data, using fallback:', error.message);
-      return this.getFallbackPricingData();
+      console.warn('Failed to fetch production pricing data, trying fallback:', error.message);
+      // Fallback to cached endpoint if production fails
+      try {
+        const fallbackResponse = await api.get('/api/ai/real-time-pricing');
+        console.log('⚠️ Using real-time API fallback');
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.warn('Both endpoints failed, using static fallback:', fallbackError.message);
+        return this.getFallbackPricingData();
+      }
     }
   },
 
   async getRecommendations() {
     try {
-      const response = await api.get('/api/recommendations');
+      // Use production AI recommendations with real ML models
+      const response = await api.get('/api/production/recommendations');
+      console.log('✅ Fetched production ML recommendations:', response.data.timestamp);
       return response.data;
     } catch (error) {
-      console.warn('Failed to fetch recommendations, using fallback:', error.message);
-      return this.getFallbackRecommendations();
+      console.warn('Failed to fetch production recommendations, trying fallback:', error.message);
+      try {
+        const fallbackResponse = await api.get('/api/ai/live-recommendations');
+        console.log('⚠️ Using live recommendations fallback');
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.warn('Both endpoints failed, using static fallback:', fallbackError.message);
+        return this.getFallbackRecommendations();
+      }
     }
   },
 
-  // AI/ML endpoints
+  // Production AI/ML endpoints with real models
   async predictCosts(data) {
     try {
-      const response = await api.post('/api/ai/predict-costs', data);
+      // Use production ML service with Prophet and LSTM models
+      const response = await api.post('/api/production/predict', {
+        ...data,
+        model_type: 'prophet', // Use Prophet for time series by default
+        include_confidence: true
+      });
+      console.log('✅ Production ML prediction completed');
       return response.data;
     } catch (error) {
-      console.warn('Failed to get AI predictions:', error.message);
-      throw error;
+      console.warn('Failed to get production predictions, trying fallback:', error.message);
+      try {
+        const fallbackResponse = await api.post('/api/ai/predict-costs', data);
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.error('Both prediction endpoints failed:', fallbackError.message);
+        throw fallbackError;
+      }
     }
   },
 
   async detectAnomalies(provider, serviceType) {
     try {
-      const response = await api.get(`/api/ai/detect-anomalies?provider=${provider}&service_type=${serviceType}`);
+      // Use production anomaly detection with enhanced ML models
+      const response = await api.get(`/api/production/anomalies?provider=${provider}&service_type=${serviceType}&include_recommendations=true`);
+      console.log('✅ Production anomaly detection completed');
       return response.data;
     } catch (error) {
-      console.warn('Failed to detect anomalies:', error.message);
-      throw error;
+      console.warn('Failed to detect anomalies with production service:', error.message);
+      try {
+        const fallbackResponse = await api.get(`/api/ai/detect-anomalies?provider=${provider}&service_type=${serviceType}`);
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.error('Both anomaly detection endpoints failed:', fallbackError.message);
+        throw fallbackError;
+      }
     }
   },
 
@@ -92,21 +181,82 @@ export const apiService = {
 
   async getModelPerformance() {
     try {
-      const response = await api.get('/api/ai/model-performance');
+      // Get performance metrics from production ML service
+      const response = await api.get('/api/production/model-performance');
+      console.log('✅ Retrieved production model performance metrics');
       return response.data;
     } catch (error) {
-      console.warn('Failed to get model performance:', error.message);
-      throw error;
+      console.warn('Failed to get production model performance:', error.message);
+      try {
+        const fallbackResponse = await api.get('/api/ai/model-performance');
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.error('Both model performance endpoints failed:', fallbackError.message);
+        throw fallbackError;
+      }
+    }
+  },
+
+  // Force refresh real-time data with production cloud providers
+  async refreshRealTimeData() {
+    try {
+      const timestamp = Date.now();
+      const response = await api.get(`/api/production/pricing?force_refresh=true&update_cache=true&t=${timestamp}`);
+      console.log('🔄 Forced refresh of production pricing data:', response.data.timestamp);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to refresh production data:', error.message);
+      try {
+        const fallbackResponse = await api.get(`/api/ai/real-time-pricing?refresh=true&t=${Date.now()}`);
+        console.log('⚠️ Using fallback refresh');
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.error('Both refresh endpoints failed:', fallbackError.message);
+        throw fallbackError;
+      }
     }
   },
 
   async trainModels() {
     try {
-      const response = await api.post('/api/ai/train-models');
+      // Train production ML models (Prophet, LSTM, etc.)
+      const response = await api.post('/api/production/train-models', {
+        models: ['prophet', 'lstm', 'statistical'],
+        retrain_all: false, // Only retrain if needed
+        background: true // Don't block UI
+      });
+      console.log('✅ Production model training initiated');
       return response.data;
     } catch (error) {
-      console.warn('Failed to train models:', error.message);
-      throw error;
+      console.warn('Failed to train production models:', error.message);
+      try {
+        const fallbackResponse = await api.post('/api/ai/train-models');
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.error('Both training endpoints failed:', fallbackError.message);
+        throw fallbackError;
+      }
+    }
+  },
+
+  // New production-specific methods
+  async getHealthStatus() {
+    try {
+      const response = await api.get('/api/production/health');
+      return response.data;
+    } catch (error) {
+      console.warn('Failed to get production health status:', error.message);
+      return { status: 'unknown', services: [] };
+    }
+  },
+
+  async getCloudProviderStatus() {
+    try {
+      const response = await api.get('/api/production/cloud-status');
+      return response.data;
+    } catch (error) {
+      console.warn('Failed to get cloud provider status:', error.message);
+      return { providers: {}, last_updated: null };
     }
   },
 

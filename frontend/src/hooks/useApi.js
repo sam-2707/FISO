@@ -35,7 +35,7 @@ export const useApi = (endpoint, options = {}) => {
       } else if (endpoint === 'comprehensiveAnalysis') {
         response = await apiService.getComprehensiveAnalysis(params);
       } else if (endpoint === 'optimizationRecommendations') {
-        response = await apiService.getOptimizationRecommendations(params);
+        response = await apiService.getRecommendations(params);
       } else if (endpoint === 'trendAnalysis') {
         response = await apiService.getTrendAnalysis();
       } else if (endpoint === 'orchestrate') {

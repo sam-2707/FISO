@@ -1,0 +1,140 @@
+# Local Development Environment Configuration
+# For running FISO Enterprise Intelligence Platform locally
+
+# Environment Settings
+environment: local
+debug: true
+log_level: INFO
+
+# Application Configuration
+app:
+  name: "FISO Enterprise Intelligence Platform"
+  version: "1.0.0"
+  host: "0.0.0.0"
+  port: 5000
+  secret_key: "dev-secret-key-change-in-production"
+
+# Real-time Server Configuration
+realtime:
+  enabled: true
+  host: "0.0.0.0"
+  port: 5001
+  websocket_path: "/ws"
+  heartbeat_interval: 30
+
+# Database Configuration
+database:
+  type: sqlite
+  path: "fiso_production.db"
+  backup_enabled: false
+  
+# AI/ML Configuration
+ai:
+  model_path: "models/"
+  fallback_enabled: true
+  confidence_threshold: 0.7
+  max_prediction_days: 90
+  
+  # OpenAI Configuration (optional)
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-3.5-turbo"
+    enabled: false
+  
+  # AutoML Configuration
+  automl:
+    enabled: false
+    budget: 60  # seconds
+
+# Cloud Provider APIs
+cloud_providers:
+  aws:
+    enabled: true
+    # For local development, use mock data
+    mock_data: true
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+    region: "us-east-1"
+    
+  azure:
+    enabled: true
+    mock_data: true
+    subscription_id: "${AZURE_SUBSCRIPTION_ID}"
+    client_id: "${AZURE_CLIENT_ID}"
+    client_secret: "${AZURE_CLIENT_SECRET}"
+    tenant_id: "${AZURE_TENANT_ID}"
+    
+  gcp:
+    enabled: true
+    mock_data: true
+    project_id: "${GCP_PROJECT_ID}"
+    service_account_key: "${GCP_SERVICE_ACCOUNT_KEY}"
+
+# Security Configuration
+security:
+  cors_enabled: true
+  cors_origins: ["http://localhost:3000", "http://127.0.0.1:3000"]
+  rate_limiting:
+    enabled: false
+    requests_per_minute: 1000
+  
+  # Authentication (disabled for local development)
+  authentication:
+    enabled: false
+    type: "none"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  metrics_enabled: true
+  health_checks:
+    enabled: true
+    interval: 30
+    endpoints:
+      - "http://localhost:5000/health"
+      - "http://localhost:5001/health"
+  
+  # Logging Configuration
+  logging:
+    level: INFO
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file: "logs/local.log"
+    rotation: "daily"
+    retention: "7 days"
+
+# Docker Configuration
+docker:
+  enabled: true
+  compose_file: "docker-compose.yml"
+  build_context: "."
+  dockerfile: "Dockerfile"
+
+# Frontend Configuration
+frontend:
+  build_path: "frontend/build"
+  static_path: "frontend/build/static"
+  development_server: "http://localhost:3000"
+
+# Performance Configuration
+performance:
+  cache_enabled: true
+  cache_ttl: 300  # 5 minutes
+  connection_pool_size: 10
+  request_timeout: 30
+  
+# Features Configuration
+features:
+  executive_reporting: true
+  real_time_streaming: true
+  ai_predictions: true
+  natural_language: true
+  anomaly_detection: true
+  cost_optimization: true
+  multi_cloud: true
+  
+# Development Tools
+development:
+  hot_reload: true
+  debug_mode: true
+  profiling: false
+  test_data_enabled: true

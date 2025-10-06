@@ -1,0 +1,108 @@
+# FISO Enterprise Intelligence Platform - Production Dockerfile
+FROM node:18-alpine AS frontend-builder
+
+# Set working directory for frontend build
+WORKDIR /app/frontend
+
+# Copy frontend package files first for better caching
+COPY frontend/package*.json ./
+
+# Install ALL dependencies (not just production) for build process
+# React build process needs devDependencies like react-scripts
+RUN npm ci
+
+# Copy frontend source code
+COPY frontend/ ./
+
+# Build frontend for production
+RUN npm run build
+
+# Verify build output exists
+RUN ls -la build/ && echo "✅ Frontend build completed successfully"
+
+# Python backend stage
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    NODE_ENV=production \
+    FLASK_ENV=production
+
+# Install system dependencies (include BLAS/Fortran build deps used by numeric libs if a wheel isn't available)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libc-dev \
+    libffi-dev \
+    libssl-dev \
+    curl \
+    netcat-openbsd \
+    libopenblas-dev \
+    gfortran \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN groupadd -r fiso && useradd -r -g fiso fiso
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+# Note: requirements-production.txt is empty, so we'll create a basic one or use alternative
+COPY requirements-production.txt* ./
+
+# Upgrade pip, setuptools, wheel first so we get modern manylinux wheel handling
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install core numeric + web dependencies together so pip pulls a set of compatible binary wheels
+# Including eventlet which the realtime server expects.
+RUN pip install --no-cache-dir \
+    numpy==1.24.3 \
+    pandas==2.1.1 \
+    scikit-learn==1.3.0 \
+    waitress==2.1.2 \
+    werkzeug==2.3.7 \
+    flask==2.3.3 \
+    flask-cors==4.0.0 \
+    eventlet==0.33.3
+
+# Install smaller utility packages separately (keeps the large numeric wheel layer stable)
+RUN pip install --no-cache-dir \
+    requests==2.31.0 \
+    python-dotenv==1.0.0 \
+    psutil==5.9.5 \
+    plotly==5.17.0 || echo "Warning: plotly installation failed, continuing without it"
+
+# Install any additional requirements from file if it exists and is not empty
+RUN if [ -f requirements-production.txt ] && [ -s requirements-production.txt ]; then \
+    pip install --no-cache-dir -r requirements-production.txt || echo "Warning: Some requirements failed to install"; \
+    fi
+
+# Copy application code
+COPY . .
+
+# Copy built frontend from previous stage
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
+
+# Copy startup script
+COPY docker-start.sh /app/start.sh
+
+# Create necessary directories and set permissions
+RUN mkdir -p logs reports data && \
+    chmod +x /app/start.sh && \
+    chown -R fiso:fiso /app
+
+# Switch to non-root user
+USER fiso
+
+# Health check - more flexible to handle cases where services might not have /health endpoints
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD curl -f http://localhost:5000/ || curl -f http://localhost:5000/health || exit 1
+
+# Expose ports
+EXPOSE 5000 5001
+
+# Use exec form to ensure proper signal handling
+CMD ["/bin/bash", "/app/start.sh"]

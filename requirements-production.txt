@@ -1,0 +1,50 @@
+# FISO Production Requirements (cleaned)
+# Core web framework
+flask==2.3.3
+flask-cors==4.0.0
+waitress==2.1.2
+werkzeug==2.3.7
+flask-socketio==5.3.2
+
+# Data processing and analysis
+pandas==2.1.1
+numpy==1.24.3
+scikit-learn==1.3.0
+
+# Visualization
+plotly==5.17.0
+
+# Time series forecasting
+prophet==1.1.4
+
+# HTTP requests
+requests==2.31.0
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# System monitoring
+psutil==5.9.5
+
+# Cloud integrations and security
+boto3==1.28.0
+
+# JWT library required by security module
+PyJWT==2.8.0
+
+# PDF/reporting library (optional)
+reportlab==4.0.0
+
+# JSON handling
+ujson==5.8.0
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# Logging
+colorlog==6.7.0
+
+# Development and debugging
+python-multipart==0.0.6
+
+# End of requirements

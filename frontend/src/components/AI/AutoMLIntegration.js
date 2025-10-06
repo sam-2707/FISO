@@ -78,20 +78,33 @@ const AutoMLIntegration = ({ pricingData }) => {
     try {
       // Load existing models and training history
       const response = await fetch('http://localhost:5000/api/ai/automl/status');
-      const data = await response.json();
       
-      if (data.status === 'success') {
-        setModels(data.models || []);
-        setTrainingSessions(data.training_history || []);
-        setAutoMLStatus(data.automl_status || 'idle');
-        setModelPerformance(data.performance || {});
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success') {
+          setModels(data.models || []);
+          setTrainingSessions(data.training_history || []);
+          setAutoMLStatus(data.automl_status || 'idle');
+          setModelPerformance(data.performance || {});
+          return;
+        }
       }
+      
+      // If response is not ok (404, etc.) or no success status, use demo data
+      throw new Error(`AutoML endpoint not available (${response.status})`);
+      
     } catch (error) {
-      console.error('Error initializing AutoML:', error);
+      // Only log error once, not continuously
+      if (!error.logged) {
+        console.warn('AutoML service not available, using demo data:', error.message);
+        error.logged = true;
+      }
+      
       // Load demo data
       setModels(generateDemoModels());
       setTrainingSessions(generateDemoTrainingSessions());
       setModelPerformance(generateDemoPerformance());
+      setAutoMLStatus('demo');
     }
   };
 
@@ -254,6 +267,9 @@ const AutoMLIntegration = ({ pricingData }) => {
 
   // Filter models
   const filteredModels = useMemo(() => {
+    if (!models || !Array.isArray(models)) {
+      return [];
+    }
     return models.filter(model => 
       selectedModelType === 'all' || model.type === selectedModelType
     );
@@ -549,7 +565,7 @@ const AutoMLIntegration = ({ pricingData }) => {
                 </Typography>
                 
                 <List>
-                  {trainingSessions.map((session) => (
+                  {(trainingSessions || []).map((session) => (
                     <ListItem key={session.id} divider>
                       <ListItemIcon>
                         <Schedule color="primary" />
@@ -619,7 +635,7 @@ const AutoMLIntegration = ({ pricingData }) => {
                           <strong>Features Used:</strong>
                         </Typography>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                          {model.features.map((feature) => (
+                          {(model.features || []).map((feature) => (
                             <Chip 
                               key={feature}
                               label={feature.replace('_', ' ')}
@@ -648,11 +664,16 @@ const AutoMLIntegration = ({ pricingData }) => {
                           <strong>Hyperparameters:</strong>
                         </Typography>
                         <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                          {Object.entries(model.hyperparameters).map(([key, value]) => (
+                          {model.hyperparameters && Object.entries(model.hyperparameters).map(([key, value]) => (
                             <Typography key={key} variant="body2" sx={{ fontFamily: 'monospace' }}>
                               {key}: {typeof value === 'number' ? value : `"${value}"`}
                             </Typography>
                           ))}
+                          {!model.hyperparameters && (
+                            <Typography variant="body2" color="text.secondary">
+                              No hyperparameters available
+                            </Typography>
+                          )}
                         </Paper>
                         
                         <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
