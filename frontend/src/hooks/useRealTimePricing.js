@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiToken } from '../utils/apiUtils';
 
 const useRealTimePricing = () => {
   const [data, setData] = useState({
@@ -26,7 +27,7 @@ const useRealTimePricing = () => {
           timeout: 10000,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer your-token-here'
+            'Authorization': `Bearer ${process.env.REACT_APP_API_TOKEN || await getApiToken()}`
           }
         });
 

@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import axios from 'axios';
+import { getApiToken } from '../../utils/apiUtils';
 
 const PricingChart = ({ data, loading = false }) => {
   const [pricingData, setPricingData] = useState([]);
@@ -21,7 +22,7 @@ const PricingChart = ({ data, loading = false }) => {
           timeout: 10000,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer your-token-here'
+            'Authorization': `Bearer ${process.env.REACT_APP_API_TOKEN || await getApiToken()}`
           }
         });
         

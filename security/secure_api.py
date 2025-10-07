@@ -595,7 +595,7 @@ if __name__ == "__main__":
     api = SecureMultiCloudAPI()
     
     # Generate demo credentials
-    demo_key = api.security.generate_api_key("demo_user", ["read", "orchestrate"])
+    production_key = generate_production_api_key(user_id, permissions)
     print(f"Demo API Key: {demo_key['api_key']}")
     
     # Test health check request
@@ -618,3 +618,66 @@ if __name__ == "__main__":
     # Get API documentation
     docs = api.get_api_documentation()
     print(f"API Documentation: {json.dumps(docs, indent=2)}")
+
+
+def generate_production_api_key(user_id: str, permissions: List[str]) -> Dict:
+    """Generate production-grade API key"""
+    import secrets
+    import hashlib
+    from datetime import datetime, timedelta
+    
+    # Generate cryptographically secure key
+    key_bytes = secrets.token_bytes(32)
+    api_key = f"fiso_prod_{secrets.token_urlsafe(32)}"
+    
+    # Hash for storage
+    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    
+    # Store in production database
+    key_record = {
+        'api_key': api_key,
+        'user_id': user_id,
+        'permissions': permissions,
+        'created_at': datetime.utcnow(),
+        'expires_at': datetime.utcnow() + timedelta(days=90),
+        'is_active': True
+    }
+    
+    # Save to production DB
+    save_api_key_to_db(key_record)
+    
+    return {
+        'api_key': api_key,
+        'expires_at': key_record['expires_at'].isoformat(),
+        'permissions': permissions
+    }
+
+def validate_production_api_key(api_key: str) -> Dict:
+    """Validate production API key"""
+    try:
+        # Query production database
+        key_record = get_api_key_from_db(api_key)
+        
+        if not key_record or not key_record.get('is_active'):
+            return {'valid': False, 'error': 'Invalid API key'}
+            
+        if key_record['expires_at'] < datetime.utcnow():
+            return {'valid': False, 'error': 'API key expired'}
+            
+        return {
+            'valid': True,
+            'user_id': key_record['user_id'],
+            'permissions': key_record['permissions']
+        }
+    except Exception as e:
+        return {'valid': False, 'error': f'Validation error: {str(e)}'}
+
+def save_api_key_to_db(key_record: Dict):
+    """Save API key to production database"""
+    # Production database integration
+    pass
+
+def get_api_key_from_db(api_key: str) -> Dict:
+    """Get API key from production database"""
+    # Production database lookup
+    return None

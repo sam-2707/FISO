@@ -8,6 +8,7 @@ import {
   TrendingUp, TrendingDown, Warning, CheckCircle,
   ExpandMore, Psychology, AutoAwesome, Speed
 } from '@mui/icons-material';
+import { getApiToken } from '../../utils/apiUtils';
 import axios from 'axios';
 
 const AIInsightsSummary = ({ data, loading }) => {
@@ -30,7 +31,7 @@ const AIInsightsSummary = ({ data, loading }) => {
           timeout: 12000,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer your-token-here'
+            'Authorization': `Bearer ${process.env.REACT_APP_API_TOKEN || await getApiToken()}`
           }
         });
         

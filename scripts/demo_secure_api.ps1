@@ -164,7 +164,7 @@ try {
 } catch {
     Write-Host "⚠️ Credential generation pending (server still starting)" -ForegroundColor Yellow
     # Use fallback demo credentials
-    $demoApiKey = "fiso_demo_key_for_testing"
+    $demoApiKey = "${FISO_PRODUCTION_API_KEY}"
     $demoJwt = "demo_jwt_token"
 }
 

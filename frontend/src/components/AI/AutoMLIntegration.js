@@ -46,6 +46,7 @@ import {
   Download,
   CloudUpload
 } from '@mui/icons-material';
+import { getApiToken } from '../../utils/apiUtils';
 import {
   LineChart,
   Line,
@@ -77,7 +78,7 @@ const AutoMLIntegration = ({ pricingData }) => {
   const initializeAutoML = async () => {
     try {
       // Load existing models and training history
-      const response = await fetch('http://localhost:5000/api/ai/automl/status');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ai/automl/status`);
       
       if (response.ok) {
         const data = await response.json();
@@ -121,10 +122,11 @@ const AutoMLIntegration = ({ pricingData }) => {
     });
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/automl/train', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ai/automl/train`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_API_TOKEN || await getApiToken()}`
         },
         body: JSON.stringify({
           model_types: ['lstm', 'random_forest', 'gradient_boost', 'neural_network'],
@@ -147,6 +149,33 @@ const AutoMLIntegration = ({ pricingData }) => {
 
   // Simulate training progress
   const simulateTrainingProgress = () => {
+// Real data fetching - replaces mock data
+const fetchRealData = async (endpoint) => {
+  try {
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    const token = await getApiToken();
+    const response = await fetch(`${API_BASE}/api/real-data/${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    const realData = await response.json();
+    return realData;
+  } catch (error) {
+    console.error('Failed to fetch real data:', error);
+    // Fallback to cached data or show error state
+    return null;
+  }
+};
+
+// getApiToken is now imported from utils
+
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 15;

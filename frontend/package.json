@@ -22,7 +22,7 @@
   "scripts": {
     "start": "concurrently \"npm run backend\" \"npm run frontend\"",
     "frontend": "react-scripts start",
-    "backend": "cd .. && python production_server.py",
+    "backend": "cd .. && python production_api_server.py",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -46,5 +46,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:8000"
 }

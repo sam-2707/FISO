@@ -1,0 +1,78 @@
+# FISO Real Cloud Data Integration Requirements
+# Production dependencies for eliminating mock data
+
+# Core FastAPI and async support
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.4.0
+python-dotenv>=1.0.0
+
+# AWS Integration
+boto3>=1.34.0
+botocore>=1.34.0
+aiobotocore>=2.8.0
+
+# Azure Integration  
+azure-identity>=1.15.0
+azure-mgmt-consumption>=10.0.0
+azure-mgmt-costmanagement>=4.0.0
+azure-mgmt-billing>=6.0.0
+azure-common>=1.1.28
+
+# Google Cloud Integration
+google-cloud-billing>=1.12.0
+google-auth>=2.23.0
+google-api-core>=2.12.0
+google-cloud-core>=2.3.3
+
+# Data Processing & Analysis
+pandas>=2.1.0
+numpy>=1.24.0
+openpyxl>=3.1.0
+
+# HTTP Client & Async Support
+aiohttp>=3.9.0
+httpx>=0.25.0
+requests>=2.31.0
+
+# Retry Logic & Error Handling
+tenacity>=8.2.3
+backoff>=2.2.1
+
+# Database Support
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.7
+
+# Security & Authentication
+cryptography>=41.0.0
+PyJWT>=2.8.0
+
+# Data Validation & Serialization
+marshmallow>=3.20.0
+jsonschema>=4.19.0
+
+# Monitoring & Logging
+prometheus-client>=0.17.0
+structlog>=23.1.0
+
+# Math & Decimal Operations
+decimal
+
+# Date & Time Handling
+pytz>=2023.3
+python-dateutil>=2.8.2
+
+# Configuration Management
+pyyaml>=6.0.1
+toml>=0.10.2
+
+# Testing (for validation)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+
+# Development Tools
+black>=23.9.0
+isort>=5.12.0
+mypy>=1.5.0

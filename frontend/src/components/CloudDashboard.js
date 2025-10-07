@@ -373,7 +373,7 @@ const CloudDashboard = () => {
               mb: 2
             }}
           >
-            Atharman
+            FISO - NEW VERSION LOADED ✅
           </Typography>
           <Typography 
             variant="h5" 
@@ -383,11 +383,15 @@ const CloudDashboard = () => {
               fontWeight: 400,
               fontSize: { xs: '1.125rem', md: '1.25rem' },
               lineHeight: 1.5,
-              color: '#4a5568',
-              mb: 3
+              color: '#e53e3e',
+              mb: 3,
+              backgroundColor: '#fed7d7',
+              padding: 2,
+              borderRadius: 2,
+              border: '3px solid #e53e3e'
             }}
           >
-            AI-Powered Financial Intelligence & Operations Platform
+            🚨 NEW UI LOADED - SCROLL DOWN TO SEE THE TABS! 🚨
           </Typography>
           <Box sx={{ 
             display: 'flex', 
@@ -437,11 +441,24 @@ const CloudDashboard = () => {
         <Box sx={{ 
           backgroundColor: '#ffffff',
           borderRadius: 2,
-          p: 1,
+          p: 3,
           mb: 4,
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          border: '1px solid rgba(226, 232, 240, 0.8)'
+          boxShadow: '0 8px 25px 0 rgba(0, 0, 0, 0.2)',
+          border: '4px solid #e53e3e'
         }}>
+          <Typography variant="h4" sx={{ 
+            mb: 3, 
+            color: '#e53e3e', 
+            fontWeight: 700,
+            textAlign: 'center',
+            backgroundColor: '#fed7d7',
+            padding: 2,
+            borderRadius: 2,
+            border: '2px solid #e53e3e',
+            fontSize: '1.8rem'
+          }}>
+            🚀 CLICK THESE TABS TO SEE ALL AI FEATURES! 🚀
+          </Typography>
           <Tabs 
             value={activeTab} 
             onChange={(e, newValue) => setActiveTab(newValue)}
@@ -449,17 +466,24 @@ const CloudDashboard = () => {
             scrollButtons="auto"
             sx={{
               '& .MuiTab-root': {
-                minHeight: 48,
+                minHeight: 56,
                 textTransform: 'none',
                 fontWeight: 500,
-                fontSize: '0.875rem',
+                fontSize: '0.9rem',
                 color: '#718096',
                 borderRadius: 1,
                 margin: '4px',
+                border: '1px solid #e2e8f0',
                 '&.Mui-selected': {
-                  color: '#2d3748',
-                  backgroundColor: '#f7fafc',
+                  color: '#ffffff',
+                  backgroundColor: '#3182ce',
                   fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(49, 130, 206, 0.4)',
+                  transform: 'translateY(-1px)',
+                },
+                '&:hover': {
+                  backgroundColor: '#edf2f7',
+                  transform: 'translateY(-1px)',
                 },
               },
               '& .MuiTabs-indicator': {
@@ -467,14 +491,14 @@ const CloudDashboard = () => {
               }
             }}
           >
-            <Tab icon={<Assessment />} label="Dashboard Overview" />
-            <Tab icon={<Psychology />} label="AI Predictions" />
-            <Tab icon={<Analytics />} label="Natural Language" />
-            <Tab icon={<Warning />} label="Anomaly Detection" />
-            <Tab icon={<AutoFixHigh />} label="AutoML" />
-            <Tab icon={<Business />} label="Executive Reports" />
-            <Tab icon={<MonitorHeart />} label="System Metrics" />
-            <Tab icon={<BugReport />} label="Integration Test" />
+            <Tab icon={<Assessment />} label="📊 Overview" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<Psychology />} label="🤖 AI Predictions" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<Analytics />} label="💬 AI Chatbot" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<Warning />} label="⚠️ Anomaly Detection" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<AutoFixHigh />} label="🎛️ AutoML" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<Business />} label="📈 Executive Reports" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<MonitorHeart />} label="🔧 System Metrics" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
+            <Tab icon={<BugReport />} label="🧪 Integration Test" sx={{ fontSize: '1.1rem', minHeight: 70 }} />
           </Tabs>
         </Box>
         

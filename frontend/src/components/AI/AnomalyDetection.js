@@ -51,6 +51,7 @@ import {
   Scatter,
   ReferenceLine
 } from 'recharts';
+import { getApiToken } from '../../utils/apiUtils';
 
 const AnomalyDetection = ({ pricingData }) => {
   const [anomalies, setAnomalies] = useState([]);
@@ -64,10 +65,11 @@ const AnomalyDetection = ({ pricingData }) => {
   const detectAnomalies = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/ai/detect-anomalies', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/ai/detect-anomalies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_API_TOKEN || await getApiToken()}`
         },
         body: JSON.stringify({
           sensitivity: detectionSensitivity,

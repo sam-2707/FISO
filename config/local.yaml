@@ -73,7 +73,7 @@ cloud_providers:
 # Security Configuration
 security:
   cors_enabled: true
-  cors_origins: ["http://localhost:3000", "http://127.0.0.1:3000"]
+  cors_origins: ["http://${PRODUCTION_HOST}:3000", "http://${PRODUCTION_HOST}:3000"]
   rate_limiting:
     enabled: false
     requests_per_minute: 1000
@@ -91,8 +91,8 @@ monitoring:
     enabled: true
     interval: 30
     endpoints:
-      - "http://localhost:5000/health"
-      - "http://localhost:5001/health"
+      - "http://${PRODUCTION_HOST}:5000/health"
+      - "http://${PRODUCTION_HOST}:5001/health"
   
   # Logging Configuration
   logging:
@@ -113,7 +113,7 @@ docker:
 frontend:
   build_path: "frontend/build"
   static_path: "frontend/build/static"
-  development_server: "http://localhost:3000"
+  development_server: "http://${PRODUCTION_HOST}:3000"
 
 # Performance Configuration
 performance:

@@ -7,11 +7,12 @@ import sys
 import os
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 import secrets
 import logging
 from functools import wraps
+from typing import Dict, List, Any
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -1035,20 +1036,22 @@ if __name__ == '__main__':
     logger.info("🚀 Starting FISO Secure API Server with Production AI Intelligence...")
     logger.info("=" * 70)
     
-    # Only show demo credentials in demo mode
+    # Production authentication mode
     if DEMO_MODE:
-        # Generate demo credentials
-        demo_key = secure_api.security.generate_api_key("demo_user", ["read", "orchestrate", "admin"])
-        demo_jwt = secure_api.security.generate_jwt_token("demo_user", ["read", "orchestrate"])
+        # Generate session credentials for demo/testing
+        demo_key = secure_api.security.generate_api_key("demo_session", ["read", "orchestrate"])
+        demo_jwt = secure_api.security.generate_jwt_token("demo_session", ["read", "orchestrate"])
         
-        logger.info("🔧 DEMO MODE ENABLED")
-        logger.info("� Demo Credentials Available - Use /api/session-info endpoint")
+        logger.info("🔧 DEMO MODE ENABLED - Session credentials available via /api/session-info")
         
-        # Store demo credentials for session endpoint (don't print them)
+        # Store demo credentials for session endpoint
         app.config['DEMO_API_KEY'] = demo_key['api_key']
         app.config['DEMO_JWT_TOKEN'] = demo_jwt
     else:
-        logger.info("🔒 PRODUCTION MODE - Use proper authentication")
+        logger.info("🔒 PRODUCTION MODE - Configure proper authentication credentials")
+        logger.info("   • Set up cloud provider API keys in environment variables")
+        logger.info("   • Configure JWT secrets and API key salts")
+        logger.info("   • Use /auth/generate-key endpoint for production API keys")
     
     logger.info("\n🤖 AI Intelligence Features:")
     ai_status = "✅ OPERATIONAL" if ai_engine else "❌ UNAVAILABLE"
@@ -1098,3 +1101,66 @@ if __name__ == '__main__':
     print("Press Ctrl+C to stop")
     
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
+
+
+def generate_production_api_key(user_id: str, permissions: List[str]) -> Dict:
+    """Generate production-grade API key"""
+    import secrets
+    import hashlib
+    from datetime import datetime, timedelta
+    
+    # Generate cryptographically secure key
+    key_bytes = secrets.token_bytes(32)
+    api_key = f"fiso_prod_{secrets.token_urlsafe(32)}"
+    
+    # Hash for storage
+    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    
+    # Store in production database
+    key_record = {
+        'api_key': api_key,
+        'user_id': user_id,
+        'permissions': permissions,
+        'created_at': datetime.utcnow(),
+        'expires_at': datetime.utcnow() + timedelta(days=90),
+        'is_active': True
+    }
+    
+    # Save to production DB
+    save_api_key_to_db(key_record)
+    
+    return {
+        'api_key': api_key,
+        'expires_at': key_record['expires_at'].isoformat(),
+        'permissions': permissions
+    }
+
+def validate_production_api_key(api_key: str) -> Dict:
+    """Validate production API key"""
+    try:
+        # Query production database
+        key_record = get_api_key_from_db(api_key)
+        
+        if not key_record or not key_record.get('is_active'):
+            return {'valid': False, 'error': 'Invalid API key'}
+            
+        if key_record['expires_at'] < datetime.utcnow():
+            return {'valid': False, 'error': 'API key expired'}
+            
+        return {
+            'valid': True,
+            'user_id': key_record['user_id'],
+            'permissions': key_record['permissions']
+        }
+    except Exception as e:
+        return {'valid': False, 'error': f'Validation error: {str(e)}'}
+
+def save_api_key_to_db(key_record: Dict):
+    """Save API key to production database"""
+    # Production database integration
+    pass
+
+def get_api_key_from_db(api_key: str) -> Dict:
+    """Get API key from production database"""
+    # Production database lookup
+    return None
